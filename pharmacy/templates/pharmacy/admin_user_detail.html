@@ -1,0 +1,383 @@
+{% extends 'pharmacy/base.html' %}
+{% load static %}
+
+{% block title %}Détails Utilisateur - {{ user_detail.username }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h2"><i class="fas fa-user"></i> Détails de l'utilisateur : {{ user_detail.username }}</h1>
+        <a href="{% url 'pharmacy:admin_users_list' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Retour à la liste
+        </a>
+    </div>
+
+    <!-- Informations de l'utilisateur -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Informations Générales</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm">
+                        <tr>
+                            <th>ID:</th>
+                            <td>{{ user_detail.id }}</td>
+                        </tr>
+                        <tr>
+                            <th>Nom d'utilisateur:</th>
+                            <td><strong>{{ user_detail.username }}</strong></td>
+                        </tr>
+                        <tr>
+                            <th>Nom complet:</th>
+                            <td>{{ user_detail.first_name }} {{ user_detail.last_name }}</td>
+                        </tr>
+                        <tr>
+                            <th>Email:</th>
+                            <td>{{ user_detail.email }}</td>
+                        </tr>
+                        <tr>
+                            <th>Type:</th>
+                            <td>
+                                {% if user_detail.is_superuser %}
+                                    <span class="badge bg-danger">Super Admin</span>
+                                {% elif user_detail.is_staff %}
+                                    <span class="badge bg-warning">Admin</span>
+                                {% else %}
+                                    <span class="badge bg-info">Utilisateur</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Statut:</th>
+                            <td>
+                                {% if user_detail.is_active %}
+                                    <span class="badge bg-success">Actif</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Inactif</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Date d'inscription:</th>
+                            <td>{{ user_detail.date_joined|date:"d/m/Y H:i" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Dernière connexion:</th>
+                            <td>{{ user_detail.last_login|date:"d/m/Y H:i"|default:"-" }}</td>
+                        </tr>
+                    </table>
+
+                    <!-- Actions -->
+                    <div class="mt-3">
+                        <h6>Actions</h6>
+                        {% if user_detail.id != user.id %}
+                            <form method="post" action="{% url 'pharmacy:admin_user_toggle_status' user_detail.id %}" class="d-inline">
+                                {% csrf_token %}
+                                {% if user_detail.is_active %}
+                                    <button type="submit" class="btn btn-sm btn-warning w-100 mb-2">
+                                        <i class="fas fa-user-slash"></i> Désactiver
+                                    </button>
+                                {% else %}
+                                    <button type="submit" class="btn btn-sm btn-success w-100 mb-2">
+                                        <i class="fas fa-user-check"></i> Activer
+                                    </button>
+                                {% endif %}
+                            </form>
+
+                            {% if user.is_superuser %}
+                                <form method="post" action="{% url 'pharmacy:admin_user_toggle_staff' user_detail.id %}" class="d-inline">
+                                    {% csrf_token %}
+                                    {% if user_detail.is_staff %}
+                                        <button type="submit" class="btn btn-sm btn-secondary w-100 mb-2">
+                                            <i class="fas fa-user-minus"></i> Retirer admin
+                                        </button>
+                                    {% else %}
+                                        <button type="submit" class="btn btn-sm btn-info w-100 mb-2">
+                                            <i class="fas fa-user-plus"></i> Promouvoir admin
+                                        </button>
+                                    {% endif %}
+                                </form>
+
+                                <a href="{% url 'pharmacy:admin_user_delete' user_detail.id %}" class="btn btn-sm btn-danger w-100">
+                                    <i class="fas fa-trash"></i> Supprimer
+                                </a>
+                            {% endif %}
+                        {% else %}
+                            <div class="alert alert-info">
+                                Vous ne pouvez pas modifier votre propre compte.
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <!-- Statistiques des médicaments -->
+            <div class="card mb-3">
+                <div class="card-header text-white" style="background: linear-gradient(135deg, #0f766e, #14b8a6);">
+                    <h5 class="mb-0"><i class="bi bi-capsule"></i> Tableau de Bord Médicaments</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-3">
+                            <div class="p-3 rounded" style="background: linear-gradient(135deg, #d1fae5, #a7f3d0);">
+                                <h3 style="color: #0f766e;">{{ total_medicaments }}</h3>
+                                <p class="text-muted mb-0"><i class="bi bi-capsule"></i> Médicaments</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="p-3 rounded" style="background: linear-gradient(135deg, #bfdbfe, #93c5fd);">
+                                <h3 style="color: #1e40af;">{{ valeur_stock_total|floatformat:0 }}</h3>
+                                <p class="text-muted mb-0"><i class="bi bi-currency-dollar"></i> FCFA</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="p-3 rounded" style="background: linear-gradient(135deg, #fecaca, #fca5a5);">
+                                <h3 style="color: #991b1b;">{{ medicaments_rupture }}</h3>
+                                <p class="text-muted mb-0"><i class="bi bi-x-circle"></i> Ruptures</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="p-3 rounded" style="background: linear-gradient(135deg, #fde68a, #fcd34d);">
+                                <h3 style="color: #92400e;">{{ medicaments_alerte }}</h3>
+                                <p class="text-muted mb-0"><i class="bi bi-exclamation-triangle"></i> Alertes</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Statistiques de ventes -->
+            <div class="card mb-3">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">Statistiques de Ventes</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-6">
+                            <h2>{{ total_ventes }}</h2>
+                            <p class="text-muted">Nombre de Ventes</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h2>{{ montant_total_ventes|floatformat:0 }} FCFA</h2>
+                            <p class="text-muted">Montant Total</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Statistiques d'activité -->
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">Statistiques d'Activité</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for stat in activity_stats %}
+                        <div class="col-md-4 mb-2">
+                            <div class="border p-2 rounded text-center">
+                                <strong>{{ stat.get_action_display|default:stat.action }}</strong>
+                                <br>
+                                <span class="text-muted">{{ stat.count }} fois</span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Liste des médicaments en temps réel -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header text-white" style="background: linear-gradient(135deg, #0f766e, #14b8a6);">
+                    <h5 class="mb-0"><i class="bi bi-capsule-pill"></i> Médicaments Ajoutés (Temps Réel)</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th><i class="bi bi-capsule"></i> Médicament</th>
+                                    <th><i class="bi bi-tag"></i> Catégorie</th>
+                                    <th><i class="bi bi-currency-exchange"></i> Prix Unitaire</th>
+                                    <th><i class="bi bi-box-seam"></i> Stock</th>
+                                    <th><i class="bi bi-calculator"></i> Valeur Stock</th>
+                                    <th><i class="bi bi-calendar"></i> Date Expiration</th>
+                                    <th><i class="bi bi-info-circle"></i> Statut</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for med in medicaments %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="me-2" style="width: 30px; height: 30px; background: linear-gradient(135deg, #d1fae5, #a7f3d0); border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                                                <i class="bi bi-capsule-pill" style="color: #0f766e;"></i>
+                                            </div>
+                                            <div>
+                                                <strong style="color: #0f766e;">{{ med.nom }}</strong>
+                                                <br><small class="text-muted">{{ med.fabricant }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td><span class="badge" style="background: linear-gradient(135deg, #d1fae5, #a7f3d0); color: #0f766e;">{{ med.categorie.nom|default:"Non catégorisé" }}</span></td>
+                                    <td><strong style="color: #059669;">{{ med.prix_unitaire }} FCFA</strong></td>
+                                    <td>
+                                        {% if med.quantite_stock == 0 %}
+                                        <span class="badge bg-danger">
+                                            <i class="bi bi-x-circle"></i> {{ med.quantite_stock }}
+                                        </span>
+                                        {% elif med.quantite_stock <= med.seuil_alerte %}
+                                        <span class="badge bg-warning">
+                                            <i class="bi bi-exclamation-triangle"></i> {{ med.quantite_stock }}
+                                        </span>
+                                        {% else %}
+                                        <span class="badge bg-success">
+                                            <i class="bi bi-check-circle"></i> {{ med.quantite_stock }}
+                                        </span>
+                                        {% endif %}
+                                    </td>
+                                    <td><strong>{{ med.valeur_stock|floatformat:0 }} FCFA</strong></td>
+                                    <td>
+                                        {{ med.date_expiration|date:"d/m/Y" }}
+                                        {% if med.date_expiration < today %}
+                                        <br><span class="badge bg-danger"><i class="bi bi-exclamation-octagon"></i> Expiré</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if med.quantite_stock == 0 %}
+                                        <span class="badge" style="background: linear-gradient(135deg, #dc2626, #ef4444);">
+                                            <i class="bi bi-x-circle-fill"></i> Rupture
+                                        </span>
+                                        {% elif med.quantite_stock <= med.seuil_alerte %}
+                                        <span class="badge" style="background: linear-gradient(135deg, #f59e0b, #fbbf24);">
+                                            <i class="bi bi-exclamation-triangle-fill"></i> Alerte
+                                        </span>
+                                        {% else %}
+                                        <span class="badge" style="background: linear-gradient(135deg, #059669, #10b981);">
+                                            <i class="bi bi-check-circle-fill"></i> OK
+                                        </span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-center py-5">
+                                        <i class="bi bi-inbox" style="font-size: 3rem; color: #cbd5e1;"></i>
+                                        <p class="text-muted mt-3">Aucun médicament ajouté par cet utilisateur</p>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dernières ventes -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Dernières Ventes (10 dernières)</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Date</th>
+                                    <th>Client</th>
+                                    <th>Montant</th>
+                                    <th>Méthode de Paiement</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for vente in ventes %}
+                                <tr>
+                                    <td>#{{ vente.id }}</td>
+                                    <td>{{ vente.date_vente|date:"d/m/Y H:i" }}</td>
+                                    <td>{{ vente.client|default:"-" }}</td>
+                                    <td><strong>{{ vente.montant_total|floatformat:0 }} FCFA</strong></td>
+                                    <td>{{ vente.get_methode_paiement_display }}</td>
+                                    <td>
+                                        <a href="{% url 'pharmacy:detail_vente' vente.id %}" class="btn btn-sm btn-info">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted">Aucune vente enregistrée</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Journal d'activités -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-warning">
+                    <h5 class="mb-0">Journal d'Activités (50 dernières)</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
+                        <table class="table table-sm table-hover">
+                            <thead class="sticky-top bg-white">
+                                <tr>
+                                    <th>Date/Heure</th>
+                                    <th>Action</th>
+                                    <th>Description</th>
+                                    <th>Modèle</th>
+                                    <th>IP</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for activity in activities %}
+                                <tr>
+                                    <td>{{ activity.timestamp|date:"d/m/Y H:i:s" }}</td>
+                                    <td>
+                                        <span class="badge 
+                                            {% if activity.action == 'CREATE' %}bg-success
+                                            {% elif activity.action == 'UPDATE' %}bg-warning
+                                            {% elif activity.action == 'DELETE' %}bg-danger
+                                            {% elif activity.action == 'LOGIN' %}bg-info
+                                            {% elif activity.action == 'VENTE' %}bg-primary
+                                            {% else %}bg-secondary{% endif %}">
+                                            {{ activity.get_action_display }}
+                                        </span>
+                                    </td>
+                                    <td>{{ activity.description }}</td>
+                                    <td>{{ activity.model_name|default:"-" }}</td>
+                                    <td><small>{{ activity.ip_address|default:"-" }}</small></td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center text-muted">Aucune activité enregistrée</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

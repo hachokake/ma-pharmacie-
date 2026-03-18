@@ -1,0 +1,25 @@
+{
+  "name": "hotel-app-android",
+  "version": "1.0.0",
+  "description": "Application Android pour Hotel App (Gestion de Pharmacie)",
+  "main": "index.js",
+  "scripts": {
+    "init": "npm install && npx cap init",
+    "add:android": "npx cap add android",
+    "sync": "npx cap sync",
+    "open:android": "npx cap open android",
+    "build": "npx cap sync && cd android && ./gradlew assembleRelease",
+    "build:debug": "npx cap sync && cd android && ./gradlew assembleDebug"
+  },
+  "keywords": ["capacitor", "android", "pharmacy", "hotel"],
+  "author": "Hotel App Team",
+  "license": "MIT",
+  "dependencies": {
+    "@capacitor/android": "^5.5.1",
+    "@capacitor/core": "^5.5.1",
+    "@capacitor/splash-screen": "^5.0.6"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^5.5.1"
+  }
+}

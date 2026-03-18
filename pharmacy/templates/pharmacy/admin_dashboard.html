@@ -1,0 +1,267 @@
+{% extends 'pharmacy/base.html' %}
+{% load static %}
+
+{% block title %}Administration - Tableau de Bord{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h2"><i class="fas fa-user-shield"></i> Administration - Tableau de Bord</h1>
+        <a href="{% url 'pharmacy:dashboard' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Retour au tableau de bord
+        </a>
+    </div>
+
+    <!-- Statistiques utilisateurs -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <a href="{% url 'pharmacy:admin_users_list' %}" class="text-decoration-none">
+                <div class="card text-white bg-primary mb-3" style="cursor: pointer; transition: transform 0.2s;">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 class="card-title">Total Utilisateurs</h5>
+                                <h2 class="mb-0">{{ total_users }}</h2>
+                            </div>
+                            <i class="fas fa-users fa-3x opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-3">
+            <a href="{% url 'pharmacy:admin_chiffres_affaires' %}" class="text-decoration-none">
+                <div class="card text-white mb-3" style="background: linear-gradient(135deg, #059669, #10b981); cursor: pointer; transition: transform 0.2s;">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 class="card-title">Performance</h5>
+                                <h2 class="mb-0"><i class="bi bi-graph-up-arrow"></i></h2>
+                                <small>Investissements & ROI</small>
+                            </div>
+                            <i class="bi bi-currency-dollar fa-3x opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-warning mb-3">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="card-title">Administrateurs</h5>
+                            <h2 class="mb-0">{{ admin_users }}</h2>
+                        </div>
+                        <i class="fas fa-user-shield fa-3x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-info mb-3">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="card-title">Connexions Aujourd'hui</h5>
+                            <h2 class="mb-0">{{ logins_today }}</h2>
+                        </div>
+                        <i class="fas fa-sign-in-alt fa-3x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Menus d'administration -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h3 class="mb-3">Actions d'Administration</h3>
+        </div>
+        <div class="col-md-3 mb-3">
+            <a href="{% url 'pharmacy:admin_users_list' %}" class="text-decoration-none">
+                <div class="card hover-shadow h-100">
+                    <div class="card-body text-center">
+                        <i class="fas fa-users-cog fa-4x text-primary mb-3"></i>
+                        <h5>Gérer les Utilisateurs</h5>
+                        <p class="text-muted">Voir, modifier et gérer les comptes utilisateurs</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-3 mb-3">
+            <a href="{% url 'pharmacy:admin_chiffres_affaires' %}" class="text-decoration-none">
+                <div class="card hover-shadow h-100">
+                    <div class="card-body text-center">
+                        <i class="bi bi-graph-up-arrow fa-4x mb-3" style="color: #059669; font-size: 3.5rem;"></i>
+                        <h5>Chiffres d'Affaires</h5>
+                        <p class="text-muted">Investissements et bénéfices par utilisateur</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-3 mb-3">
+            <a href="{% url 'pharmacy:admin_activities' %}" class="text-decoration-none">
+                <div class="card hover-shadow h-100">
+                    <div class="card-body text-center">
+                        <i class="fas fa-history fa-4x text-success mb-3"></i>
+                        <h5>Journal d'Activités</h5>
+                        <p class="text-muted">Consulter toutes les activités des utilisateurs</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-3 mb-3">
+            <a href="{% url 'pharmacy:admin_stock_by_user' %}" class="text-decoration-none">
+                <div class="card hover-shadow h-100">
+                    <div class="card-body text-center">
+                        <i class="fas fa-boxes fa-4x text-warning mb-3"></i>
+                        <h5>Stock par Utilisateur</h5>
+                        <p class="text-muted">Voir les ventes et activités par utilisateur</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-3 mb-3">
+            <a href="{% url 'pharmacy:admin_cartes_liste' %}" class="text-decoration-none">
+                <div class="card hover-shadow h-100" style="border: 2px solid #2E7D32;">
+                    <div class="card-body text-center">
+                        <i class="fas fa-id-card fa-4x text-success mb-3"></i>
+                        <h5>Cartes d'Employés</h5>
+                        <p class="text-muted">Créer et gérer les cartes professionnelles</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <!-- Top vendeurs -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-trophy"></i> Top 10 Vendeurs</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Vendeur</th>
+                                    <th>Nombre de Ventes</th>
+                                    <th>Montant Total</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for stat in ventes_stats %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>
+                                        <strong>{{ stat.vendeur__username }}</strong>
+                                        {% if stat.vendeur__first_name %}
+                                        <br><small class="text-muted">{{ stat.vendeur__first_name }} {{ stat.vendeur__last_name }}</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ stat.total_ventes }}</td>
+                                    <td><strong>{{ stat.montant_total|floatformat:0 }} FCFA</strong></td>
+                                    <td>
+                                        {% if stat.vendeur__id %}
+                                        <a href="{% url 'pharmacy:admin_user_detail' stat.vendeur__id %}" class="btn btn-sm btn-info">
+                                            <i class="fas fa-eye"></i> Voir
+                                        </a>
+                                        {% else %}
+                                        <span class="text-muted"><i class="bi bi-dash"></i></span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center text-muted">Aucune vente enregistrée</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Activités récentes -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-clock"></i> Activités Récentes (20 dernières)</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Date/Heure</th>
+                                    <th>Utilisateur</th>
+                                    <th>Action</th>
+                                    <th>Description</th>
+                                    <th>IP</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for activity in recent_activities %}
+                                <tr>
+                                    <td>{{ activity.timestamp|date:"d/m/Y H:i" }}</td>
+                                    <td>{{ activity.user.username }}</td>
+                                    <td>
+                                        <span class="badge 
+                                            {% if activity.action == 'CREATE' %}bg-success
+                                            {% elif activity.action == 'UPDATE' %}bg-warning
+                                            {% elif activity.action == 'DELETE' %}bg-danger
+                                            {% elif activity.action == 'LOGIN' %}bg-info
+                                            {% elif activity.action == 'VENTE' %}bg-primary
+                                            {% else %}bg-secondary{% endif %}">
+                                            {{ activity.get_action_display }}
+                                        </span>
+                                    </td>
+                                    <td>{{ activity.description }}</td>
+                                    <td><small>{{ activity.ip_address|default:"-" }}</small></td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center text-muted">Aucune activité enregistrée</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="text-end mt-3">
+                        <a href="{% url 'pharmacy:admin_activities' %}" class="btn btn-primary">
+                            Voir toutes les activités <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .hover-shadow {
+        transition: all 0.3s ease;
+    }
+    .hover-shadow:hover {
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        transform: translateY(-5px);
+    }
+    .opacity-50 {
+        opacity: 0.5;
+    }
+    a .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    }
+</style>
+{% endblock %}

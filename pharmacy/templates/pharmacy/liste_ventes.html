@@ -1,0 +1,106 @@
+{% extends 'pharmacy/base.html' %}
+
+{% block title %}Liste des ventes - Pharmacie{% endblock %}
+{% block page_title %}Liste des ventes{% endblock %}
+
+{% block content %}
+<div class="mb-3 d-flex justify-content-end">
+    <a href="{% url 'pharmacy:creer_vente' %}" class="btn btn-success btn-lg shadow-sm">
+        <i class="bi bi-cart-plus"></i> Créer une vente
+    </a>
+</div>
+
+<div class="card fade-in-up">
+    <div class="card-header">
+        <h5><i class="bi bi-funnel"></i> Filtrer les ventes</h5>
+    </div>
+    <div class="card-body">
+        <form method="get" class="mb-4">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label fw-bold"><i class="bi bi-calendar-event"></i> Date début</label>
+                    <input type="date" name="date_debut" class="form-control" value="{{ date_debut }}">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-bold"><i class="bi bi-calendar-event"></i> Date fin</label>
+                    <input type="date" name="date_fin" class="form-control" value="{{ date_fin }}">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">&nbsp;</label>
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-search"></i> Filtrer
+                    </button>
+                </div>
+            </div>
+        </form>
+
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th><i class="bi bi-receipt"></i> N° Vente</th>
+                        <th><i class="bi bi-calendar3"></i> Date</th>
+                        <th><i class="bi bi-person"></i> Client</th>
+                        <th><i class="bi bi-cash-stack"></i> Montant</th>
+                        <th><i class="bi bi-credit-card"></i> Paiement</th>
+                        <th><i class="bi bi-person-badge"></i> Vendeur</th>
+                        <th><i class="bi bi-gear"></i> Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for vente in ventes %}
+                    <tr class="fade-in-up">
+                        <td>
+                            <strong style="color: #0f766e; font-size: 1.1rem;">#{{ vente.id }}</strong>
+                        </td>
+                        <td>
+                            <i class="bi bi-clock"></i> {{ vente.date_vente|date:"d/m/Y" }}<br>
+                            <small class="text-muted">{{ vente.date_vente|date:"H:i" }}</small>
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="me-2" style="width: 35px; height: 35px; background: linear-gradient(135deg, #d1fae5, #a7f3d0); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                                    <i class="bi bi-person-fill" style="color: #0f766e;"></i>
+                                </div>
+                                <span>{{ vente.client|default:"Client anonyme" }}</span>
+                            </div>
+                        </td>
+                        <td>
+                            <strong style="color: #059669; font-size: 1.1rem;">{{ vente.montant_total }} FCFA</strong>
+                        </td>
+                        <td>
+                            <span class="badge" style="background: linear-gradient(135deg, #2dd4bf, #5eead4); color: #0f766e; padding: 8px 16px;">
+                                <i class="bi bi-credit-card-fill"></i> {{ vente.get_methode_paiement_display }}
+                            </span>
+                        </td>
+                        <td>
+                            <i class="bi bi-person-check-fill" style="color: #0f766e;"></i> {{ vente.vendeur.username|default:"N/A" }}
+                        </td>
+                        <td>
+                            <div class="btn-group" role="group">
+                                <a href="{% url 'pharmacy:detail_vente' vente.id %}" class="btn btn-sm btn-info" title="Voir détails">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <a href="{% url 'pharmacy:supprimer_vente' vente.id %}" class="btn btn-sm btn-danger" title="Supprimer">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center py-5">
+                            <i class="bi bi-cart-x" style="font-size: 4rem; color: #cbd5e1;"></i>
+                            <p class="text-muted mt-3">Aucune vente trouvée</p>
+                            <a href="{% url 'pharmacy:creer_vente' %}" class="btn btn-success mt-2">
+                                <i class="bi bi-cart-plus"></i> Créer une vente
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

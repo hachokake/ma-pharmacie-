@@ -1,0 +1,80 @@
+{% extends 'pharmacy/base.html' %}
+{% load static %}
+
+{% block title %}Stock par Utilisateur{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h2"><i class="fas fa-boxes"></i> Stock et Ventes par Utilisateur</h1>
+        <a href="{% url 'pharmacy:admin_dashboard' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Retour
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Statistiques par Utilisateur</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Utilisateur</th>
+                            <th>Nom complet</th>
+                            <th>Type</th>
+                            <th>Nombre de Ventes</th>
+                            <th>Médicaments Vendus</th>
+                            <th>Montant Total</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for u in users %}
+                        <tr>
+                            <td><strong>{{ u.username }}</strong></td>
+                            <td>{{ u.first_name }} {{ u.last_name }}</td>
+                            <td>
+                                {% if u.is_staff %}
+                                    <span class="badge bg-warning">Admin</span>
+                                {% else %}
+                                    <span class="badge bg-info">Utilisateur</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ u.nb_ventes|default:0 }}</td>
+                            <td>{{ u.nb_medicaments_vendus|default:0 }}</td>
+                            <td><strong>{{ u.montant_ventes|default:0|floatformat:0 }} FCFA</strong></td>
+                            <td>
+                                <a href="{% url 'pharmacy:admin_user_detail' u.id %}" class="btn btn-sm btn-info">
+                                    <i class="fas fa-eye"></i> Détails
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center text-muted">Aucun utilisateur trouvé</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot>
+                        <tr class="table-light">
+                            <th colspan="3">TOTAL</th>
+                            <th>{{ users|length }}</th>
+                            <th>-</th>
+                            <th>-</th>
+                            <th>-</th>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+
+            <div class="alert alert-info mt-3">
+                <i class="fas fa-info-circle"></i> 
+                <strong>Note:</strong> Pour tracker qui a ajouté quel médicament, il serait nécessaire d'ajouter un champ 'created_by' au modèle Medicament. 
+                Actuellement, cette page affiche les statistiques de ventes par utilisateur.
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,489 @@
+{% extends 'pharmacy/base.html' %}
+{% load static %}
+
+{% block title %}Cartes d'Employés - Administration{% endblock %}
+
+{% block extra_css %}
+<style>
+    .carte-card {
+        transition: all 0.3s ease;
+        border-left: 4px solid #2E7D32;
+    }
+    .carte-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+    }
+    .badge-poste {
+        font-size: 0.85rem;
+        padding: 0.4rem 0.8rem;
+    }
+    .photo-mini {
+        width: 60px;
+        height: 60px;
+        object-fit: cover;
+        border: 3px solid #2E7D32;
+    }
+    .carte-expire {
+        border-left-color: #dc3545;
+    }
+    .carte-proche-expiration {
+        border-left-color: #ffc107;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <!-- En-tête -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2><i class="fas fa-id-card text-success"></i> Cartes d'Employés</h2>
+            <p class="text-muted">Gestion des cartes professionnelles avec QR code</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <button type="button" class="btn btn-primary" onclick="openScannerModal()">
+                <i class="fas fa-qrcode"></i> Scanner une Carte
+            </button>
+            <a href="{% url 'pharmacy:admin_carte_creer' %}" class="btn btn-success">
+                <i class="fas fa-plus"></i> Créer une Carte
+            </a>
+            <a href="{% url 'pharmacy:admin_dashboard' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Retour
+            </a>
+        </div>
+    </div>
+
+    <!-- Filtres -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label"><i class="fas fa-search"></i> Recherche</label>
+                    <input type="text" name="recherche" class="form-control" 
+                           placeholder="Nom, matricule, poste..." value="{{ recherche }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label"><i class="fas fa-briefcase"></i> Poste</label>
+                    <select name="poste" class="form-select">
+                        <option value="">Tous les postes</option>
+                        {% for value, label in postes_choices %}
+                        <option value="{{ value }}" {% if filtre_poste == value %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label"><i class="fas fa-filter"></i> Statut</label>
+                    <select name="statut" class="form-select">
+                        <option value="">Tous</option>
+                        <option value="actif" {% if filtre_statut == 'actif' %}selected{% endif %}>Actives</option>
+                        <option value="inactif" {% if filtre_statut == 'inactif' %}selected{% endif %}>Inactives</option>
+                        <option value="expire" {% if filtre_statut == 'expire' %}selected{% endif %}>Expirées</option>
+                    </select>
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-filter"></i> Filtrer
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Statistiques -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card border-success">
+                <div class="card-body text-center">
+                    <h3 class="text-success">{{ cartes.count }}</h3>
+                    <p class="mb-0">Total Cartes</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-primary">
+                <div class="card-body text-center">
+                    <h3 class="text-primary">{{ cartes|length }}</h3>
+                    <p class="mb-0">Cartes Actives</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-warning">
+                <div class="card-body text-center">
+                    <h3 class="text-warning">
+                        {% for carte in cartes %}
+                            {% if carte.jours_avant_expiration <= 30 and carte.jours_avant_expiration > 0 %}1{% endif %}
+                        {% endfor %}
+                    </h3>
+                    <p class="mb-0">Expirent bientôt</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-danger">
+                <div class="card-body text-center">
+                    <h3 class="text-danger">
+                        {% for carte in cartes %}
+                            {% if carte.est_expiree %}1{% endif %}
+                        {% endfor %}
+                    </h3>
+                    <p class="mb-0">Expirées</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Liste des cartes -->
+    {% if cartes %}
+    <div class="row">
+        {% for carte in cartes %}
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card carte-card {% if carte.est_expiree %}carte-expire{% elif carte.jours_avant_expiration <= 30 %}carte-proche-expiration{% endif %}">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div class="d-flex align-items-center">
+                            {% if carte.photo %}
+                            <img src="{{ carte.photo.url }}" alt="Photo" class="rounded-circle photo-mini me-3">
+                            {% else %}
+                            <div class="rounded-circle photo-mini bg-success text-white d-flex align-items-center justify-content-center me-3">
+                                <i class="fas fa-user fa-2x"></i>
+                            </div>
+                            {% endif %}
+                            <div>
+                                <h5 class="mb-1">{{ carte.utilisateur.get_full_name|default:carte.utilisateur.username }}</h5>
+                                <small class="text-muted">{{ carte.matricule }}</small>
+                            </div>
+                        </div>
+                        {% if carte.actif %}
+                        <span class="badge bg-success">Active</span>
+                        {% else %}
+                        <span class="badge bg-secondary">Inactive</span>
+                        {% endif %}
+                    </div>
+
+                    <hr>
+
+                    <div class="mb-3">
+                        <span class="badge badge-poste bg-primary">
+                            <i class="fas fa-briefcase"></i> {{ carte.get_poste_display }}
+                        </span>
+                    </div>
+
+                    <div class="small mb-2">
+                        <i class="fas fa-calendar-alt text-muted"></i>
+                        Embauché le {{ carte.date_embauche|date:"d/m/Y" }}
+                    </div>
+
+                    <div class="small mb-3">
+                        {% if carte.est_expiree %}
+                        <span class="text-danger">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            Expirée le {{ carte.date_expiration_carte|date:"d/m/Y" }}
+                        </span>
+                        {% elif carte.jours_avant_expiration <= 30 %}
+                        <span class="text-warning">
+                            <i class="fas fa-clock"></i>
+                            Expire dans {{ carte.jours_avant_expiration }} jours
+                        </span>
+                        {% else %}
+                        <span class="text-success">
+                            <i class="fas fa-check-circle"></i>
+                            Valide jusqu'au {{ carte.date_expiration_carte|date:"d/m/Y" }}
+                        </span>
+                        {% endif %}
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'pharmacy:admin_carte_detail' carte.id %}" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-eye"></i> Voir Détails
+                        </a>
+                        <div class="btn-group btn-group-sm">
+                            <a href="{% url 'pharmacy:admin_carte_imprimer' carte.id %}" class="btn btn-outline-success" target="_blank">
+                                <i class="fas fa-print"></i> Imprimer
+                            </a>
+                            <a href="{% url 'pharmacy:admin_carte_modifier' carte.id %}" class="btn btn-outline-warning">
+                                <i class="fas fa-edit"></i> Modifier
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="alert alert-info text-center">
+        <i class="fas fa-info-circle fa-3x mb-3"></i>
+        <h5>Aucune carte trouvée</h5>
+        <p>{% if recherche or filtre_poste or filtre_statut %}
+            Essayez de modifier vos filtres.
+        {% else %}
+            Commencez par créer la première carte d'employé.
+        {% endif %}</p>
+        <a href="{% url 'pharmacy:admin_carte_creer' %}" class="btn btn-success">
+            <i class="fas fa-plus"></i> Créer une Carte
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Modal Scanner QR -->
+<div class="modal fade" id="scannerModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-qrcode"></i> Scanner une Carte d'Employé
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center mb-3">
+                    <p class="text-muted">Positionnez le QR code de la carte devant la caméra</p>
+                </div>
+                
+                <!-- Zone de scan avec html5-qrcode -->
+                <div id="reader" style="width: 100%;"></div>
+
+                <div id="scannerError" class="alert alert-danger mt-3" style="display: none;"></div>
+                <div id="scannerStatus" class="alert alert-info mt-3" style="display: none;">
+                    <i class="fas fa-spinner fa-spin"></i> Recherche de QR code...
+                </div>
+
+                <!-- Résultat du scan -->
+                <div id="scanResult" style="display: none;" class="mt-4">
+                    <div class="card border-success">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0"><i class="fas fa-check-circle"></i> Carte Scannée</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-3 text-center">
+                                    <img id="resultPhoto" src="" alt="Photo" class="img-thumbnail rounded-circle" style="width: 100px; height: 100px; object-fit: cover;">
+                                </div>
+                                <div class="col-md-9">
+                                    <h4 id="resultNom" class="text-success mb-2"></h4>
+                                    <p id="resultInfo" class="mb-2"></p>
+                                    <div id="resultDetails" class="small text-muted"></div>
+                                    <hr>
+                                    <div class="d-grid gap-2">
+                                        <a id="resultLink" href="#" class="btn btn-success">
+                                            <i class="fas fa-eye"></i> Voir la Carte Complète
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="stopScanner()">
+                    <i class="fas fa-times"></i> Fermer
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script>
+let html5QrCode = null;
+let scannerModal = null;
+
+function openScannerModal() {
+    scannerModal = new bootstrap.Modal(document.getElementById('scannerModal'), {
+        backdrop: 'static',
+        keyboard: false
+    });
+    scannerModal.show();
+    
+    // Réinitialiser
+    document.getElementById('scanResult').style.display = 'none';
+    document.getElementById('scannerError').style.display = 'none';
+    document.getElementById('scannerStatus').style.display = 'block';
+    document.getElementById('scannerStatus').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Initialisation de la caméra...';
+    
+    setTimeout(() => startScanner(), 500);
+}
+
+function startScanner() {
+    const errorDiv = document.getElementById('scannerError');
+    const statusDiv = document.getElementById('scannerStatus');
+    
+    html5QrCode = new Html5Qrcode("reader");
+    
+    const config = {
+        fps: 10,
+        qrbox: { width: 300, height: 300 },
+        aspectRatio: 1.0,
+        experimentalFeatures: {
+            useBarCodeDetectorIfSupported: true
+        }
+    };
+    
+    html5QrCode.start(
+        { facingMode: "environment" },
+        config,
+        (decodedText, decodedResult) => {
+            // QR code détecté avec succès
+            console.log('✅ QR Code scanné:', decodedText);
+            statusDiv.innerHTML = '<i class="fas fa-check-circle"></i> QR Code détecté!';
+            
+            // Arrêter le scanner
+            html5QrCode.stop().then(() => {
+                parseQRData(decodedText);
+            }).catch(err => {
+                console.error('Erreur arrêt scanner:', err);
+                parseQRData(decodedText);
+            });
+        },
+        (errorMessage) => {
+            // Erreurs de scan (trop fréquentes, on les ignore)
+            // console.log('Scan en cours...', errorMessage);
+        }
+    ).catch((err) => {
+        console.error('Erreur démarrage scanner:', err);
+        errorDiv.textContent = '❌ Impossible d\'accéder à la caméra: ' + err;
+        errorDiv.style.display = 'block';
+        statusDiv.style.display = 'none';
+    });
+    
+    statusDiv.innerHTML = '<i class="fas fa-qrcode"></i> Positionnez le QR code dans le cadre...';
+}
+
+function stopScanner() {
+    if (html5QrCode) {
+        html5QrCode.stop().then(() => {
+            html5QrCode.clear();
+            html5QrCode = null;
+        }).catch(err => {
+            console.error('Erreur arrêt:', err);
+        });
+    }
+    
+    if (scannerModal) {
+        scannerModal.hide();
+    }
+}
+
+function parseQRData(qrData) {
+    console.log('Analyse QR data...');
+    
+    const statusDiv = document.getElementById('scannerStatus');
+    const errorDiv = document.getElementById('scannerError');
+    
+    // Parser les données du QR code
+    const lines = qrData.split('\n');
+    
+    if (!qrData.includes('PHARMACARE') && !qrData.includes('Carte d\'Employé')) {
+        console.log('QR non valide');
+        errorDiv.textContent = '❌ Ce QR code n\'est pas une carte PharmaCare valide.';
+        errorDiv.style.display = 'block';
+        statusDiv.style.display = 'none';
+        
+        // Reprendre le scan après 3 secondes
+        setTimeout(() => {
+            errorDiv.style.display = 'none';
+            statusDiv.style.display = 'block';
+            startScanner();
+        }, 3000);
+        return;
+    }
+    
+    // Extraire les informations
+    let nom = '', matricule = '', poste = '', telephone = '', email = '', dateEmbauche = '', dateExpiration = '';
+    
+    lines.forEach(line => {
+        if (line.includes('Nom:')) nom = line.split('Nom:')[1].trim();
+        if (line.includes('Matricule:')) matricule = line.split('Matricule:')[1].trim();
+        if (line.includes('Poste:')) poste = line.split('Poste:')[1].trim();
+        if (line.includes('Téléphone:')) telephone = line.split('Téléphone:')[1].trim();
+        if (line.includes('Email:')) email = line.split('Email:')[1].trim();
+        if (line.includes('Date d\'embauche:')) dateEmbauche = line.split('Date d\'embauche:')[1].trim();
+        if (line.includes('Carte valide jusqu\'au:')) dateExpiration = line.split('Carte valide jusqu\'au:')[1].trim();
+    });
+    
+    console.log('Matricule extrait:', matricule);
+    statusDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Recherche de la carte...';
+    statusDiv.style.display = 'block';
+    
+    // Rechercher la carte dans la base de données via AJAX
+    fetch(`/admin-cartes/rechercher/?matricule=${encodeURIComponent(matricule)}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                console.log('Carte trouvée!', data.carte);
+                displayCardInfo(data.carte);
+            } else {
+                console.log('Carte non trouvée en BDD, affichage infos QR');
+                displayQRInfo(nom, matricule, poste, telephone, email, dateEmbauche, dateExpiration);
+            }
+        })
+        .catch(err => {
+            console.error('Erreur fetch:', err);
+            displayQRInfo(nom, matricule, poste, telephone, email, dateEmbauche, dateExpiration);
+        });
+}
+
+function displayCardInfo(carte) {
+    document.getElementById('scannerStatus').style.display = 'none';
+    document.getElementById('scanResult').style.display = 'block';
+    
+    // Photo
+    const photoUrl = carte.photo_url || "{% static 'icons/user-placeholder.png' %}";
+    document.getElementById('resultPhoto').src = photoUrl;
+    
+    // Informations
+    document.getElementById('resultNom').textContent = carte.nom;
+    document.getElementById('resultInfo').innerHTML = `
+        <span class="badge bg-success">${carte.poste}</span>
+        <span class="badge bg-secondary">${carte.matricule}</span>
+    `;
+    
+    document.getElementById('resultDetails').innerHTML = `
+        <i class="fas fa-phone"></i> ${carte.telephone || 'N/A'}<br>
+        <i class="fas fa-envelope"></i> ${carte.email}<br>
+        <i class="fas fa-calendar"></i> Embauché(e) le: ${carte.date_embauche}<br>
+        <i class="fas fa-clock"></i> Carte valide jusqu'au: ${carte.date_expiration}
+    `;
+    
+    // Lien vers la carte
+    document.getElementById('resultLink').href = `/admin-cartes/${carte.id}/`;
+    
+    // Arrêter le scanner
+    if (scannerAnimationId) {
+        cancelAnimationFrame(scannerAnimationId);
+    }
+}
+
+function displayQRInfo(nom, matricule, poste, telephone, email, dateEmbauche, dateExpiration) {
+    document.getElementById('scannerStatus').style.display = 'none';
+    document.getElementById('scanResult').style.display = 'block';
+    
+    document.getElementById('resultPhoto').src = "{% static 'icons/user-placeholder.png' %}";
+    document.getElementById('resultNom').textContent = nom;
+    document.getElementById('resultInfo').innerHTML = `
+        <span class="badge bg-success">${poste}</span>
+        <span class="badge bg-secondary">${matricule}</span>
+    `;
+    
+    document.getElementById('resultDetails').innerHTML = `
+        <i class="fas fa-phone"></i> ${telephone}<br>
+        <i class="fas fa-envelope"></i> ${email}<br>
+        <i class="fas fa-calendar"></i> Embauché(e) le: ${dateEmbauche}<br>
+        <i class="fas fa-clock"></i> Carte valide jusqu'au: ${dateExpiration}
+    `;
+    
+    document.getElementById('resultLink').style.display = 'none';
+}
+
+// Nettoyer au fermeture de la modal
+document.getElementById('scannerModal').addEventListener('hidden.bs.modal', function() {
+    stopScanner();
+});
+</script>
+
+{% endblock %}

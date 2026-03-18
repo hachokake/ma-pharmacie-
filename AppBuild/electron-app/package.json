@@ -1,0 +1,55 @@
+{
+  "name": "pharmacare-electron",
+  "version": "1.0.0",
+  "description": "Application de gestion de pharmacie pour Windows et Linux",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build:win": "electron-builder --win",
+    "build:linux": "electron-builder --linux",
+    "build:all": "electron-builder --win --linux",
+    "dev": "electron . --dev"
+  },
+  "keywords": ["pharmacy", "pharmacare", "management", "electron"],
+  "author": "PharmaCare Team",
+  "license": "MIT",
+  "dependencies": {
+    "electron-store": "^8.1.0"
+  },
+  "devDependencies": {
+    "electron": "^28.0.0",
+    "electron-builder": "^24.9.1"
+  },
+  "build": {
+    "appId": "com.pharmacare.app",
+    "productName": "PharmaCare",
+    "directories": {
+      "buildResources": "build",
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "renderer.js",
+      "package.json"
+    ],
+    "win": {
+      "target": ["nsis", "portable"],
+      "icon": "build/icon.ico",
+      "artifactName": "PharmaCare-Setup-${version}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Hotel App"
+    },
+    "linux": {
+      "target": ["AppImage", "deb"],
+      "icon": "build/icon-512x512.png",
+      "category": "Office",
+      "artifactName": "Hotel-App-${version}.${ext}"
+    }
+  }
+}

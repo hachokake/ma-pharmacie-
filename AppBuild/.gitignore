@@ -1,0 +1,61 @@
+# AppBuild - Fichiers à ignorer
+
+# Node modules
+node_modules/
+package-lock.json
+npm-debug.log*
+
+# Electron build
+electron-app/dist/
+electron-app/build/*.png
+electron-app/build/*.ico
+
+# Android
+android-app/android/
+android-app/.gradle/
+android-app/build/
+android-app/www/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Fichiers temporaires
+*.tmp
+*.temp
+
+# Fichiers de build
+dist/
+build/
+*.apk
+*.exe
+*.AppImage
+*.deb
+
+# Environnement
+.env
+.env.local
+
+# Icônes générées (peuvent être regénérées)
+# Décommentez si vous voulez les ignorer
+# static/icons/*.png

@@ -1,0 +1,129 @@
+{% extends 'pharmacy/base.html' %}
+{% load static %}
+
+{% block title %}Journal d'Activités{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h2"><i class="fas fa-history"></i> Journal d'Activités</h1>
+        <a href="{% url 'pharmacy:admin_dashboard' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Retour
+        </a>
+    </div>
+
+    <!-- Filtres -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <label for="user" class="form-label">Utilisateur</label>
+                    <select class="form-select" id="user" name="user">
+                        <option value="">Tous les utilisateurs</option>
+                        {% for u in users %}
+                        <option value="{{ u.id }}" {% if selected_user == u.id|stringformat:"s" %}selected{% endif %}>
+                            {{ u.username }} - {{ u.first_name }} {{ u.last_name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label for="action" class="form-label">Action</label>
+                    <select class="form-select" id="action" name="action">
+                        <option value="">Toutes</option>
+                        {% for value, label in action_choices %}
+                        <option value="{{ value }}" {% if selected_action == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label for="date_from" class="form-label">Date début</label>
+                    <input type="date" class="form-control" id="date_from" name="date_from" value="{{ date_from }}">
+                </div>
+                <div class="col-md-2">
+                    <label for="date_to" class="form-label">Date fin</label>
+                    <input type="date" class="form-control" id="date_to" name="date_to" value="{{ date_to }}">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">&nbsp;</label>
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-filter"></i> Filtrer
+                    </button>
+                </div>
+                <div class="col-md-1">
+                    <label class="form-label">&nbsp;</label>
+                    <a href="{% url 'pharmacy:admin_activities' %}" class="btn btn-secondary w-100">
+                        <i class="fas fa-redo"></i>
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Tableau des activités -->
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Activités (200 dernières)</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Date/Heure</th>
+                            <th>Utilisateur</th>
+                            <th>Action</th>
+                            <th>Description</th>
+                            <th>Modèle</th>
+                            <th>Objet ID</th>
+                            <th>Adresse IP</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for activity in activities %}
+                        <tr>
+                            <td>{{ activity.id }}</td>
+                            <td>{{ activity.timestamp|date:"d/m/Y H:i:s" }}</td>
+                            <td>
+                                <a href="{% url 'pharmacy:admin_user_detail' activity.user.id %}">
+                                    {{ activity.user.username }}
+                                </a>
+                            </td>
+                            <td>
+                                <span class="badge 
+                                    {% if activity.action == 'CREATE' %}bg-success
+                                    {% elif activity.action == 'UPDATE' %}bg-warning
+                                    {% elif activity.action == 'DELETE' %}bg-danger
+                                    {% elif activity.action == 'LOGIN' %}bg-info
+                                    {% elif activity.action == 'LOGOUT' %}bg-secondary
+                                    {% elif activity.action == 'VENTE' %}bg-primary
+                                    {% else %}bg-dark{% endif %}">
+                                    {{ activity.get_action_display }}
+                                </span>
+                            </td>
+                            <td>{{ activity.description }}</td>
+                            <td>{{ activity.model_name|default:"-" }}</td>
+                            <td>{{ activity.object_id|default:"-" }}</td>
+                            <td><small>{{ activity.ip_address|default:"-" }}</small></td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8" class="text-center text-muted py-4">
+                                Aucune activité enregistrée avec ces filtres.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            {% if activities %}
+            <div class="alert alert-info mt-3">
+                <i class="fas fa-info-circle"></i> Affichage des 200 dernières activités correspondant aux filtres.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

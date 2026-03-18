@@ -1,0 +1,89 @@
+{% extends 'pharmacy/base.html' %}
+{% load static %}
+
+{% block title %}Supprimer la Carte{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card border-danger shadow">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Confirmer la Suppression
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <strong>Attention !</strong> Cette action est irréversible.
+                    </div>
+
+                    <h5 class="mb-4">Êtes-vous sûr de vouloir supprimer cette carte ?</h5>
+
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-auto">
+                                    {% if carte.photo %}
+                                    <img src="{{ carte.photo.url }}" alt="Photo" 
+                                         class="rounded-circle" 
+                                         style="width: 80px; height: 80px; object-fit: cover; border: 3px solid #dc3545;">
+                                    {% else %}
+                                    <div class="rounded-circle bg-danger text-white d-flex align-items-center justify-content-center" 
+                                         style="width: 80px; height: 80px;">
+                                        <i class="fas fa-user fa-2x"></i>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                <div class="col">
+                                    <h5 class="mb-1">{{ carte.utilisateur.get_full_name|default:carte.utilisateur.username }}</h5>
+                                    <p class="text-muted mb-1">{{ carte.get_poste_display }}</p>
+                                    <p class="mb-0"><strong>Matricule:</strong> {{ carte.matricule }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <h6>Informations qui seront supprimées :</h6>
+                        <ul class="small">
+                            <li>Matricule: {{ carte.matricule }}</li>
+                            <li>Poste: {{ carte.get_poste_display }}</li>
+                            <li>Date d'embauche: {{ carte.date_embauche|date:"d/m/Y" }}</li>
+                            {% if carte.photo %}
+                            <li>Photo professionnelle</li>
+                            {% endif %}
+                            {% if carte.qr_code %}
+                            <li>QR Code de vérification</li>
+                            {% endif %}
+                            <li>Toutes les autres informations associées</li>
+                        </ul>
+                    </div>
+
+                    <p class="text-muted small">
+                        <i class="fas fa-info-circle"></i>
+                        Note : Le compte utilisateur (@{{ carte.utilisateur.username }}) ne sera pas supprimé.
+                        Seule la carte professionnelle sera retirée.
+                    </p>
+
+                    <form method="post" class="mt-4">
+                        {% csrf_token %}
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-danger btn-lg">
+                                <i class="fas fa-trash"></i>
+                                Oui, Supprimer Définitivement
+                            </button>
+                            <a href="{% url 'pharmacy:admin_carte_detail' carte.id %}" class="btn btn-secondary btn-lg">
+                                <i class="fas fa-times"></i>
+                                Non, Annuler
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

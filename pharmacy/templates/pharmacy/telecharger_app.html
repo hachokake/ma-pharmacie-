@@ -1,0 +1,330 @@
+{% extends 'pharmacy/base.html' %}
+
+{% block title %}Télécharger l'Application - PharmaCare{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <div class="row g-0">
+        <!-- Sidebar -->
+        {% if user.is_authenticated %}
+        <div class="col-md-2 sidebar">
+            <div class="sidebar-header">
+                <h4><i class="bi bi-heart-pulse-fill"></i> PharmaCare</h4>
+                <p class="text-white-50 mb-0">{{ user.prenom }} {{ user.nom }}</p>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="{% url 'pharmacy:dashboard' %}" class="nav-link">
+                    <i class="bi bi-speedometer2"></i> Tableau de bord
+                </a>
+                <a href="{% url 'pharmacy:telecharger_app' %}" class="nav-link active">
+                    <i class="bi bi-download"></i> Télécharger l'app
+                </a>
+            </nav>
+        </div>
+        {% endif %}
+
+        <!-- Main content -->
+        <div class="{% if user.is_authenticated %}col-md-10{% else %}col-12{% endif %} main-content">
+            <div class="container py-5">
+                <!-- En-tête -->
+                <div class="text-center mb-5 fade-in-up">
+                    <h1 class="display-4 fw-bold mb-3">
+                        <i class="bi bi-phone-fill text-primary"></i>
+                        Télécharger PharmaCare
+                    </h1>
+                    <p class="lead text-muted">
+                        Installez l'application sur votre téléphone ou votre ordinateur
+                    </p>
+                </div>
+
+                <!-- PWA Installation (Android) -->
+                <div class="row mb-4">
+                    <div class="col-lg-8 mx-auto">
+                        <div class="card shadow-lg border-0 fade-in-up" style="background: linear-gradient(135deg, #0f766e 0%, #14b8a6 100%);">
+                            <div class="card-body p-5 text-white text-center">
+                                <div class="mb-4">
+                                    <i class="bi bi-phone" style="font-size: 4rem;"></i>
+                                </div>
+                                <h2 class="mb-3">📱 Installation sur Android</h2>
+                                <p class="mb-4" style="font-size: 1.1rem;">
+                                    La méthode la plus rapide ! Installation en 30 secondes sans téléchargement.
+                                </p>
+                                <div class="bg-white text-dark p-4 rounded mb-4">
+                                    <h5 class="mb-3"><i class="bi bi-list-ol text-primary"></i> Comment installer ?</h5>
+                                    <ol class="text-start" style="font-size: 1rem;">
+                                        <li class="mb-2">Ouvrez <strong>Chrome</strong> sur votre téléphone Android</li>
+                                        <li class="mb-2">Visitez cette page sur votre téléphone</li>
+                                        <li class="mb-2">Un bouton <strong>"📲 Installer l'application"</strong> apparaîtra en bas à droite</li>
+                                        <li class="mb-2">Cliquez dessus et confirmez</li>
+                                        <li class="mb-0">✅ L'app est installée sur votre écran d'accueil !</li>
+                                    </ol>
+                                </div>
+                                <div class="alert alert-light mb-0">
+                                    <i class="bi bi-info-circle text-primary"></i>
+                                    <strong>Astuce :</strong> Si le bouton n'apparaît pas, ouvrez le menu Chrome (⋮) et cherchez "Installer l'application"
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Autres options de téléchargement -->
+                <div class="row g-4">
+                    <!-- Windows -->
+                    <div class="col-lg-6">
+                        <div class="card h-100 shadow hover-card fade-in-up">
+                            <div class="card-body p-4">
+                                <div class="text-center mb-4">
+                                    <i class="bi bi-windows" style="font-size: 3rem; color: #0078D4;"></i>
+                                </div>
+                                <h3 class="card-title text-center mb-3">🖥️ Windows</h3>
+                                <p class="text-muted text-center mb-4">
+                                    Application de bureau complète pour Windows 10/11
+                                </p>
+                                <div class="list-group list-group-flush mb-4">
+                                    <div class="list-group-item border-0 px-0">
+                                        <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                        Installation classique (.exe)
+                                    </div>
+                                    <div class="list-group-item border-0 px-0">
+                                        <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                        Fonctionne hors ligne
+                                    </div>
+                                    <div class="list-group-item border-0 px-0">
+                                        <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                        Menu Démarrer et raccourcis
+                                    </div>
+                                </div>
+                                <div class="text-center">
+                                    <a href="/static/downloads/PharmaCare-Setup.exe" class="btn btn-primary btn-lg" download>
+                                        <i class="bi bi-download"></i> Télécharger pour Windows
+                                    </a>
+                                    <p class="text-muted mt-2 mb-0" style="font-size: 0.9rem;">
+                                        Taille : ~150 MB
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Android APK -->
+                    <div class="col-lg-6">
+                        <div class="card h-100 shadow hover-card fade-in-up">
+                            <div class="card-body p-4">
+                                <div class="text-center mb-4">
+                                    <i class="bi bi-android2" style="font-size: 3rem; color: #3DDC84;"></i>
+                                </div>
+                                <h3 class="card-title text-center mb-3">📲 Android APK</h3>
+                                <p class="text-muted text-center mb-4">
+                                    Application Android native (alternative à la PWA)
+                                </p>
+                                <div class="list-group list-group-flush mb-4">
+                                    <div class="list-group-item border-0 px-0">
+                                        <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                        Application native Android
+                                    </div>
+                                    <div class="list-group-item border-0 px-0">
+                                        <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                        Installation via fichier
+                                    </div>
+                                    <div class="list-group-item border-0 px-0">
+                                        <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                        Fonctionne sans Chrome
+                                    </div>
+                                </div>
+                                <div class="text-center">
+                                    <a href="/static/downloads/PharmaCare.apk" class="btn btn-success btn-lg" download>
+                                        <i class="bi bi-download"></i> Télécharger APK
+                                    </a>
+                                    <p class="text-muted mt-2 mb-0" style="font-size: 0.9rem;">
+                                        Taille : ~5 MB
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Instructions d'installation -->
+                <div class="row mt-5">
+                    <div class="col-lg-10 mx-auto">
+                        <div class="card border-0 shadow-sm fade-in-up">
+                            <div class="card-body p-4">
+                                <h4 class="mb-4">
+                                    <i class="bi bi-question-circle text-primary"></i>
+                                    Instructions d'installation
+                                </h4>
+                                
+                                <!-- Accordion -->
+                                <div class="accordion" id="instructionsAccordion">
+                                    <!-- PWA -->
+                                    <div class="accordion-item">
+                                        <h2 class="accordion-header">
+                                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#pwaInstructions">
+                                                📱 Installation PWA (Android) - Recommandé
+                                            </button>
+                                        </h2>
+                                        <div id="pwaInstructions" class="accordion-collapse collapse show" data-bs-parent="#instructionsAccordion">
+                                            <div class="accordion-body">
+                                                <ol>
+                                                    <li>Ouvrez cette page dans <strong>Chrome</strong> sur votre téléphone Android</li>
+                                                    <li>Un bouton <strong>"📲 Installer l'application"</strong> apparaîtra automatiquement en bas à droite</li>
+                                                    <li>Cliquez sur ce bouton</li>
+                                                    <li>Confirmez l'installation dans la popup</li>
+                                                    <li>L'icône de l'application apparaîtra sur votre écran d'accueil</li>
+                                                </ol>
+                                                <div class="alert alert-info mb-0">
+                                                    <strong>Note :</strong> Cette méthode ne nécessite aucun téléchargement et l'installation est instantanée !
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Windows -->
+                                    <div class="accordion-item">
+                                        <h2 class="accordion-header">
+                                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#windowsInstructions">
+                                                🖥️ Installation Windows
+                                            </button>
+                                        </h2>
+                                        <div id="windowsInstructions" class="accordion-collapse collapse" data-bs-parent="#instructionsAccordion">
+                                            <div class="accordion-body">
+                                                <ol>
+                                                    <li>Téléchargez le fichier <code>PharmaCare-Setup.exe</code></li>
+                                                    <li>Double-cliquez sur le fichier téléchargé</li>
+                                                    <li>Suivez l'assistant d'installation</li>
+                                                    <li>L'application sera ajoutée au menu Démarrer</li>
+                                                    <li>Lancez l'application depuis le menu Démarrer</li>
+                                                </ol>
+                                                <div class="alert alert-warning mb-0">
+                                                    <strong>Sécurité :</strong> Si Windows affiche un avertissement, cliquez sur "Informations complémentaires" puis "Exécuter quand même"
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Android APK -->
+                                    <div class="accordion-item">
+                                        <h2 class="accordion-header">
+                                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#apkInstructions">
+                                                📲 Installation APK Android
+                                            </button>
+                                        </h2>
+                                        <div id="apkInstructions" class="accordion-collapse collapse" data-bs-parent="#instructionsAccordion">
+                                            <div class="accordion-body">
+                                                <ol>
+                                                    <li>Téléchargez le fichier <code>PharmaCare.apk</code> sur votre téléphone</li>
+                                                    <li>Ouvrez le fichier téléchargé</li>
+                                                    <li>Si demandé, autorisez l'installation depuis "Sources inconnues"</li>
+                                                    <li>Suivez les étapes d'installation</li>
+                                                    <li>L'application sera installée sur votre téléphone</li>
+                                                </ol>
+                                                <div class="alert alert-warning mb-0">
+                                                    <strong>Paramètres :</strong> Vous devrez peut-être activer l'installation depuis "Sources inconnues" dans les paramètres de votre téléphone
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Comparaison -->
+                <div class="row mt-5">
+                    <div class="col-lg-10 mx-auto">
+                        <div class="card border-0 shadow-sm fade-in-up">
+                            <div class="card-body p-4">
+                                <h4 class="mb-4">
+                                    <i class="bi bi-table text-primary"></i>
+                                    Quelle version choisir ?
+                                </h4>
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Critère</th>
+                                                <th class="text-center">PWA (Android)</th>
+                                                <th class="text-center">Windows</th>
+                                                <th class="text-center">APK Android</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td><strong>Installation</strong></td>
+                                                <td class="text-center"><span class="badge bg-success">30 secondes</span></td>
+                                                <td class="text-center"><span class="badge bg-warning">5 minutes</span></td>
+                                                <td class="text-center"><span class="badge bg-warning">2 minutes</span></td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>Téléchargement</strong></td>
+                                                <td class="text-center"><span class="badge bg-success">Aucun</span></td>
+                                                <td class="text-center"><span class="badge bg-secondary">~150 MB</span></td>
+                                                <td class="text-center"><span class="badge bg-info">~5 MB</span></td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>Mise à jour</strong></td>
+                                                <td class="text-center"><i class="bi bi-check-circle-fill text-success"></i> Auto</td>
+                                                <td class="text-center"><i class="bi bi-check-circle-fill text-success"></i> Auto</td>
+                                                <td class="text-center"><i class="bi bi-check-circle-fill text-success"></i> Auto</td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>Hors ligne</strong></td>
+                                                <td class="text-center"><i class="bi bi-check-circle text-warning"></i> Partiel</td>
+                                                <td class="text-center"><i class="bi bi-x-circle text-danger"></i> Non</td>
+                                                <td class="text-center"><i class="bi bi-x-circle text-danger"></i> Non</td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>Recommandation</strong></td>
+                                                <td class="text-center"><span class="badge bg-success">⭐⭐⭐</span></td>
+                                                <td class="text-center"><span class="badge bg-info">⭐⭐</span></td>
+                                                <td class="text-center"><span class="badge bg-info">⭐⭐</span></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div class="alert alert-success mt-3 mb-0">
+                                    <i class="bi bi-lightbulb-fill"></i>
+                                    <strong>Notre recommandation :</strong> Utilisez la version PWA pour Android (la plus rapide). Pour PC, téléchargez la version Windows.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Besoin d'aide -->
+                <div class="row mt-5">
+                    <div class="col-lg-8 mx-auto text-center fade-in-up">
+                        <div class="card border-0 bg-light">
+                            <div class="card-body p-4">
+                                <h5 class="mb-3">
+                                    <i class="bi bi-question-circle text-primary"></i>
+                                    Besoin d'aide ?
+                                </h5>
+                                <p class="text-muted mb-3">
+                                    Si vous rencontrez des difficultés lors de l'installation, contactez l'administrateur.
+                                </p>
+                                <a href="{% url 'pharmacy:dashboard' %}" class="btn btn-outline-primary">
+                                    <i class="bi bi-arrow-left"></i> Retour au tableau de bord
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .hover-card {
+        transition: all 0.3s ease;
+    }
+    
+    .hover-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 1rem 3rem rgba(0,0,0,.175) !important;
+    }
+</style>
+{% endblock %}

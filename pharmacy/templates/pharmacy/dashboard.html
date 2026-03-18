@@ -1,0 +1,585 @@
+{% extends 'pharmacy/base.html' %}
+
+{% block title %}Tableau de bord - Pharmacie{% endblock %}
+{% block page_title %}Tableau de bord{% endblock %}
+
+{% block content %}
+{% if not user.is_staff %}
+<div class="row mb-4">
+    <!-- Statistiques en cartes avec thème vert -->
+    <div class="col-md-3">
+        <div class="card stat-card bg-green-primary text-white fade-in-up" style="animation-delay: 0.1s">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h5><i class="bi bi-box-seam"></i> Stock Total</h5>
+                    <h2>{{ total_medicaments }}</h2>
+                    <small>Médicaments disponibles</small>
+                </div>
+                <div class="stat-icon">
+                    <i class="bi bi-capsule"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card stat-card bg-green-danger text-white fade-in-up" style="animation-delay: 0.2s">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h5><i class="bi bi-x-circle"></i> Rupture</h5>
+                    <h2>{{ medicaments_en_rupture }}</h2>
+                    <small>À réapprovisionner</small>
+                </div>
+                <div class="stat-icon">
+                    <i class="bi bi-exclamation-circle"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card stat-card bg-green-warning text-white fade-in-up" style="animation-delay: 0.3s">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h5><i class="bi bi-bell"></i> Alerte</h5>
+                    <h2>{{ medicaments_alerte }}</h2>
+                    <small>Stock critique</small>
+                </div>
+                <div class="stat-icon">
+                    <i class="bi bi-exclamation-triangle"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card stat-card bg-green-info text-white fade-in-up" style="animation-delay: 0.4s">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h5><i class="bi bi-calendar-event"></i> Expirés</h5>
+                    <h2>{{ medicaments_expires }}</h2>
+                    <small>Attention date</small>
+                </div>
+                <div class="stat-icon">
+                    <i class="bi bi-calendar-x"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="row">
+    <!-- Ventes du jour -->
+    <div class="col-md-6">
+        <div class="card mb-4 fade-in-up" style="animation-delay: 0.5s">
+            <div class="card-header bg-green-success text-white">
+                <h5><i class="bi bi-cash-coin"></i> Ventes du jour</h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6">
+                        <div class="p-3">
+                            <h3 class="text-success" style="font-size: 2.5rem; font-weight: 700;">{{ nombre_ventes_jour }}</h3>
+                            <p class="text-muted mb-0"><i class="bi bi-receipt"></i> Transactions</p>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="p-3">
+                            <h3 class="text-success" style="font-size: 2rem; font-weight: 700;">{{ total_ventes_jour|floatformat:0 }}</h3>
+                            <p class="text-muted mb-0"><i class="bi bi-currency-exchange"></i> FCFA</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-3 pt-3 border-top text-center">
+                    <small class="text-muted"><i class="bi bi-clock"></i> Mis à jour en temps réel</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ventes du mois -->
+    <div class="col-md-6">
+        <div class="card mb-4 fade-in-up" style="animation-delay: 0.6s">
+            <div class="card-header text-white" style="background: linear-gradient(135deg, #0f766e 0%, #14b8a6 100%);">
+                <h5><i class="bi bi-calendar-month"></i> Ventes du mois</h5>
+            </div>
+            <div class="card-body text-center">
+                <div class="py-3">
+                    <h2 style="font-size: 2.8rem; font-weight: 700; color: #0f766e;">{{ total_ventes_mois|floatformat:0 }}</h2>
+                    <p class="text-muted mb-0" style="font-size: 1.1rem;"><i class="bi bi-graph-up-arrow"></i> FCFA - Chiffre d'affaires mensuel</p>
+                </div>
+                <div class="mt-3 pt-3 border-top">
+                    <div class="row">
+                        <div class="col-6">
+                            <small class="text-muted">Moyenne/jour</small>
+                            <p class="mb-0 fw-bold text-success">{{ total_ventes_mois|floatformat:0|add:"0" }} FCFA</p>
+                        </div>
+                        <div class="col-6">
+                            <small class="text-muted">Objectif mensuel</small>
+                            <p class="mb-0 fw-bold" style="color: #0f766e;">En cours</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Top 5 médicaments -->
+    <div class="col-md-12">
+        <div class="card fade-in-up" style="animation-delay: 0.7s">
+            <div class="card-header">
+                <h5><i class="bi bi-trophy"></i> Top 5 médicaments les plus vendus</h5>
+            </div>
+            <div class="card-body">
+                {% if top_medicaments %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th><i class="bi bi-hash"></i> Position</th>
+                                <th><i class="bi bi-capsule-pill"></i> Médicament</th>
+                                <th><i class="bi bi-box-seam"></i> Quantité vendue</th>
+                                <th><i class="bi bi-graph-up"></i> Performance</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in top_medicaments %}
+                            <tr>
+                                <td>
+                                    <div style="display: inline-flex; align-items: center; justify-content: center; width: 35px; height: 35px; background: linear-gradient(135deg, #0f766e, #14b8a6); color: white; border-radius: 50%; font-weight: 700;">
+                                        {{ forloop.counter }}
+                                    </div>
+                                </td>
+                                <td><strong style="color: #0f766e;">{{ item.medicament__nom }}</strong></td>
+                                <td>
+                                    <span class="badge bg-success" style="font-size: 1rem; padding: 10px 20px;">
+                                        <i class="bi bi-check-circle"></i> {{ item.total_vendu }} unités
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="progress" style="height: 25px;">
+                                        {% widthratio item.total_vendu top_medicaments.0.total_vendu 100 as percentage %}
+                                        <div class="progress-bar bg-success" role="progressbar" 
+                                             data-percentage="{{ percentage }}"
+                                             aria-valuenow="{{ item.total_vendu }}" aria-valuemin="0" aria-valuemax="{{ top_medicaments.0.total_vendu }}">
+                                            {{ percentage }}%
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="bi bi-inbox" style="font-size: 4rem; color: #cbd5e1;"></i>
+                    <p class="text-muted mt-3">Aucune vente enregistrée pour le moment</p>
+                    <a href="/admin/pharmacy/vente/add/" class="btn btn-primary mt-2">
+                        <i class="bi bi-plus-circle"></i> Créer une vente
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Ma Carte de Service -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card fade-in-up border-success" style="animation-delay: 0.75s; border-width: 2px;">
+            <div class="card-header text-white" style="background: linear-gradient(135deg, #2E7D32 0%, #1B5E20 100%);">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-id-card"></i> Ma Carte de Service</h5>
+                    {% if ma_carte %}
+                    {% if ma_carte.est_expiree %}
+                    <span class="badge bg-danger">Expirée</span>
+                    {% elif ma_carte.jours_avant_expiration <= 30 %}
+                    <span class="badge bg-warning">Expire bientôt</span>
+                    {% else %}
+                    <span class="badge bg-light text-dark">Active</span>
+                    {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+            <div class="card-body">
+                {% if ma_carte %}
+                <div class="row">
+                    <!-- Aperçu de la carte -->
+                    <div class="col-md-8">
+                        <div class="d-flex align-items-center mb-3">
+                            {% if ma_carte.photo %}
+                            <img src="{{ ma_carte.photo.url }}" alt="Photo" class="rounded-circle me-3" 
+                                 style="width: 80px; height: 80px; object-fit: cover; border: 3px solid #2E7D32;">
+                            {% else %}
+                            <div class="rounded-circle me-3 d-flex align-items-center justify-content-center" 
+                                 style="width: 80px; height: 80px; background: #2E7D32; color: white;">
+                                <i class="fas fa-user fa-2x"></i>
+                            </div>
+                            {% endif %}
+                            <div>
+                                <h4 class="mb-1">{{ user.get_full_name|default:user.username }}</h4>
+                                <p class="mb-0">
+                                    <span class="badge bg-success">{{ ma_carte.get_poste_display }}</span>
+                                    <span class="badge bg-secondary">{{ ma_carte.matricule }}</span>
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <div class="row text-center mb-3">
+                            <div class="col-md-4">
+                                <div class="p-2 border rounded">
+                                    <i class="fas fa-phone text-success"></i>
+                                    <p class="mb-0 small text-muted">Téléphone</p>
+                                    <strong>{{ ma_carte.telephone|default:"N/A" }}</strong>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="p-2 border rounded">
+                                    <i class="fas fa-calendar text-info"></i>
+                                    <p class="mb-0 small text-muted">Embauche</p>
+                                    <strong>{{ ma_carte.date_embauche|date:"d/m/Y"|default:"N/A" }}</strong>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="p-2 border rounded">
+                                    <i class="fas fa-clock text-warning"></i>
+                                    <p class="mb-0 small text-muted">Expiration</p>
+                                    <strong>{{ ma_carte.date_expiration_carte|date:"d/m/Y" }}</strong>
+                                </div>
+                            </div>
+                        </div>
+
+                        {% if ma_carte.jours_avant_expiration <= 30 and not ma_carte.est_expiree %}
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            Votre carte expire dans <strong>{{ ma_carte.jours_avant_expiration }} jour(s)</strong>. 
+                            Contactez l'administrateur pour la renouveler.
+                        </div>
+                        {% elif ma_carte.est_expiree %}
+                        <div class="alert alert-danger">
+                            <i class="fas fa-times-circle"></i>
+                            Votre carte a expiré. Contactez l'administrateur pour la renouveler.
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- QR Code -->
+                    <div class="col-md-4 text-center">
+                        <div class="p-3 border rounded" style="background: #f8f9fa;">
+                            <p class="text-muted small mb-2">
+                                <i class="fas fa-qrcode"></i> Code QR de Vérification
+                            </p>
+                            {% if ma_carte.qr_code %}
+                            <img src="{{ ma_carte.qr_code.url }}" alt="QR Code" class="img-fluid mb-2" 
+                                 style="max-width: 200px; border: 2px solid #2E7D32; border-radius: 10px; padding: 10px; background: white;">
+                            <p class="small text-muted">Scannable par l'administrateur</p>
+                            {% else %}
+                            <div class="alert alert-warning">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                QR code non disponible
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-center mt-3">
+                    <a href="{% url 'pharmacy:ma_carte_imprimer' %}" class="btn btn-success" target="_blank">
+                        <i class="fas fa-print"></i> Imprimer ma Carte
+                    </a>
+                    <a href="{% url 'pharmacy:ma_carte_detail' %}" class="btn btn-outline-success">
+                        <i class="fas fa-eye"></i> Voir en Détail
+                    </a>
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-id-card" style="font-size: 4rem; color: #cbd5e1;"></i>
+                    <h5 class="mt-3 text-muted">Aucune carte de service</h5>
+                    <p class="text-muted">Votre carte de service n'a pas encore été créée par l'administrateur.</p>
+                    <p class="small text-muted">
+                        <i class="fas fa-info-circle"></i> 
+                        Contactez l'administrateur pour obtenir votre carte professionnelle avec QR code.
+                    </p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if user.is_staff %}
+<!-- Mes Performances -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card fade-in-up" style="animation-delay: 0.7s">
+            <div class="card-header bg-green-info text-white">
+                <h5><i class="bi bi-person-badge"></i> Mes Performances</h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-3">
+                        <div class="stat-box">
+                            <h3 class="text-primary">{{ mes_ventes_jour }}</h3>
+                            <p class="text-muted mb-0">Ventes aujourd'hui</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-box">
+                            <h3 class="text-success">{{ mon_montant_jour|floatformat:0 }} FCFA</h3>
+                            <p class="text-muted mb-0">Montant aujourd'hui</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-box">
+                            <h3 class="text-info">{{ mes_ventes_mois }}</h3>
+                            <p class="text-muted mb-0">Ventes ce mois</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-box">
+                            <h3 class="text-warning">{{ mon_montant_mois|floatformat:0 }} FCFA</h3>
+                            <p class="text-muted mb-0">Montant ce mois</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Performance de Tous les Utilisateurs -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card fade-in-up" style="animation-delay: 0.8s">
+            <div class="card-header bg-green-primary text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-people"></i> Performance de Tous les Utilisateurs</h5>
+                <span class="badge bg-light text-dark">{{ users_stats.count }} Utilisateur(s)</span>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Utilisateur</th>
+                                <th>Statut</th>
+                                <th>Ventes Totales</th>
+                                <th>Montant Total</th>
+                                <th>Médicaments Vendus</th>
+                                <th>Ventes Aujourd'hui</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user_stat in users_stats %}
+                            <tr {% if user_stat.username == user.username %}class="table-success"{% endif %}>
+                                <td>{{ forloop.counter }}</td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="user-avatar me-2">
+                                            <i class="bi bi-person-circle"></i>
+                                        </div>
+                                        <div>
+                                            <strong>{{ user_stat.username }}</strong>
+                                            {% if user_stat.username == user.username %}
+                                            <span class="badge bg-success ms-2">Vous</span>
+                                            {% endif %}
+                                            <br>
+                                            <small class="text-muted">{{ user_stat.first_name }} {{ user_stat.last_name }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if user_stat.is_staff %}
+                                    <span class="badge bg-warning">Admin</span>
+                                    {% else %}
+                                    <span class="badge bg-info">Vendeur</span>
+                                    {% endif %}
+                                </td>
+                                <td><strong>{{ user_stat.nb_ventes|default:0 }}</strong></td>
+                                <td><strong class="text-success">{{ user_stat.montant_total|default:0|floatformat:0 }} FCFA</strong></td>
+                                <td>{{ user_stat.nb_medicaments_vendus|default:0 }} unités</td>
+                                <td>
+                                    {% if user_stat.derniere_vente > 0 %}
+                                    <span class="badge bg-success">{{ user_stat.derniere_vente }}</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">0</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="7" class="text-center text-muted py-4">
+                                    Aucun utilisateur actif
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Activités Récentes -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card fade-in-up" style="animation-delay: 0.9s">
+            <div class="card-header bg-green-success text-white">
+                <h5><i class="bi bi-clock-history"></i> Activités Récentes (Tous les Utilisateurs)</h5>
+            </div>
+            <div class="card-body">
+                <div class="timeline">
+                    {% for activite in activites_recentes %}
+                    <div class="timeline-item">
+                        <div class="timeline-marker 
+                            {% if activite.action == 'CREATE' %}bg-success
+                            {% elif activite.action == 'UPDATE' %}bg-warning
+                            {% elif activite.action == 'DELETE' %}bg-danger
+                            {% elif activite.action == 'LOGIN' %}bg-info
+                            {% elif activite.action == 'VENTE' %}bg-primary
+                            {% else %}bg-secondary{% endif %}">
+                            {% if activite.action == 'CREATE' %}<i class="bi bi-plus-circle"></i>
+                            {% elif activite.action == 'UPDATE' %}<i class="bi bi-pencil"></i>
+                            {% elif activite.action == 'DELETE' %}<i class="bi bi-trash"></i>
+                            {% elif activite.action == 'LOGIN' %}<i class="bi bi-box-arrow-in-right"></i>
+                            {% elif activite.action == 'VENTE' %}<i class="bi bi-cart-check"></i>
+                            {% else %}<i class="bi bi-circle"></i>{% endif %}
+                        </div>
+                        <div class="timeline-content">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <strong>{{ activite.user.username }}</strong>
+                                    {% if activite.user.username == user.username %}
+                                    <span class="badge bg-success">Vous</span>
+                                    {% endif %}
+                                    <span class="badge 
+                                        {% if activite.action == 'CREATE' %}bg-success
+                                        {% elif activite.action == 'UPDATE' %}bg-warning
+                                        {% elif activite.action == 'DELETE' %}bg-danger
+                                        {% elif activite.action == 'LOGIN' %}bg-info
+                                        {% elif activite.action == 'VENTE' %}bg-primary
+                                        {% else %}bg-secondary{% endif %}">
+                                        {{ activite.get_action_display }}
+                                    </span>
+                                    <p class="mb-0">{{ activite.description }}</p>
+                                </div>
+                                <small class="text-muted">{{ activite.timestamp|timesince }} ago</small>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="text-center py-4 text-muted">
+                        <i class="bi bi-inbox" style="font-size: 3rem;"></i>
+                        <p class="mt-2">Aucune activité récente</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% else %}
+<!-- Mes Performances (Utilisateur Normal) -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card fade-in-up" style="animation-delay: 0.7s">
+            <div class="card-header bg-green-info text-white">
+                <h5><i class="bi bi-person-badge"></i> Mes Performances</h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-3">
+                        <div class="stat-box">
+                            <h3 class="text-primary">{{ mes_ventes_jour }}</h3>
+                            <p class="text-muted mb-0">Ventes aujourd'hui</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-box">
+                            <h3 class="text-success">{{ mon_montant_jour|floatformat:0 }} FCFA</h3>
+                            <p class="text-muted mb-0">Montant aujourd'hui</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-box">
+                            <h3 class="text-info">{{ mes_ventes_mois }}</h3>
+                            <p class="text-muted mb-0">Ventes ce mois</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-box">
+                            <h3 class="text-warning">{{ mon_montant_mois|floatformat:0 }} FCFA</h3>
+                            <p class="text-muted mb-0">Montant ce mois</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<style>
+    .stat-box {
+        padding: 20px;
+        border-radius: 10px;
+        transition: all 0.3s ease;
+    }
+    
+    .stat-box:hover {
+        background: #f8f9fa;
+        transform: translateY(-5px);
+    }
+    
+    .user-avatar i {
+        font-size: 2rem;
+        color: #667eea;
+    }
+    
+    .table-success {
+        background-color: rgba(16, 185, 129, 0.1) !important;
+    }
+    
+    .timeline {
+        position: relative;
+        padding: 20px 0;
+    }
+    
+    .timeline-item {
+        display: flex;
+        margin-bottom: 20px;
+        position: relative;
+    }
+    
+    .timeline-marker {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        margin-right: 15px;
+        flex-shrink: 0;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+    
+    .timeline-content {
+        flex: 1;
+        padding: 10px 15px;
+        background: #f8f9fa;
+        border-radius: 10px;
+        border-left: 3px solid #667eea;
+    }
+    
+    .timeline-content strong {
+        color: #667eea;
+    }
+</style>
+{% endblock %}

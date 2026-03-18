@@ -1,0 +1,64 @@
+{% extends 'pharmacy/base.html' %}
+{% load static %}
+
+{% block title %}Supprimer Utilisateur{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0"><i class="fas fa-exclamation-triangle"></i> Confirmation de Suppression</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-danger">
+                        <strong>Attention!</strong> Cette action est irréversible.
+                    </div>
+
+                    <p>Êtes-vous sûr de vouloir supprimer l'utilisateur suivant ?</p>
+
+                    <table class="table">
+                        <tr>
+                            <th>Nom d'utilisateur:</th>
+                            <td>{{ user_to_delete.username }}</td>
+                        </tr>
+                        <tr>
+                            <th>Nom complet:</th>
+                            <td>{{ user_to_delete.first_name }} {{ user_to_delete.last_name }}</td>
+                        </tr>
+                        <tr>
+                            <th>Email:</th>
+                            <td>{{ user_to_delete.email }}</td>
+                        </tr>
+                        <tr>
+                            <th>Type:</th>
+                            <td>
+                                {% if user_to_delete.is_staff %}
+                                    <span class="badge bg-warning">Administrateur</span>
+                                {% else %}
+                                    <span class="badge bg-info">Utilisateur</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    </table>
+
+                    <div class="alert alert-warning">
+                        <strong>Note:</strong> Toutes les ventes et activités de cet utilisateur seront également supprimées ou orphelines.
+                    </div>
+
+                    <form method="post" class="d-flex gap-2">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger flex-fill">
+                            <i class="fas fa-trash"></i> Oui, supprimer
+                        </button>
+                        <a href="{% url 'pharmacy:admin_user_detail' user_to_delete.id %}" class="btn btn-secondary flex-fill">
+                            <i class="fas fa-times"></i> Annuler
+                        </a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,192 @@
+{% extends 'pharmacy/base.html' %}
+
+{% block title %}Liste des médicaments - Pharmacie{% endblock %}
+{% block page_title %}Liste des médicaments{% endblock %}
+
+{% block content %}
+<div class="mb-3 d-flex justify-content-end">
+    <a href="{% url 'pharmacy:ajouter_medicament' %}" class="btn btn-success btn-lg shadow-sm">
+        <i class="bi bi-plus-circle"></i> Ajouter un médicament
+    </a>
+</div>
+
+{% if user.is_staff and users_medicaments_stats %}
+<!-- Statistiques par utilisateur (Admin uniquement) -->
+<div class="row mb-4">
+    {% for user_stat in users_medicaments_stats %}
+    <div class="col-md-4 mb-3">
+        <div class="card fade-in-up h-100" style="border-left: 4px solid #0f766e;">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="mb-0">
+                        <i class="bi bi-person-circle" style="color: #0f766e;"></i> 
+                        <strong>{{ user_stat.username }}</strong>
+                    </h6>
+                    <span class="badge" style="background: linear-gradient(135deg, #0f766e, #14b8a6);">
+                        {{ user_stat.nb_medicaments }}
+                    </span>
+                </div>
+                <div class="text-muted small">
+                    <i class="bi bi-capsule"></i> {{ user_stat.nb_medicaments }} médicament{{ user_stat.nb_medicaments|pluralize }}
+                </div>
+                <div style="color: #059669; font-weight: bold; font-size: 1.1rem;">
+                    <i class="bi bi-currency-dollar"></i> {{ user_stat.valeur_stock|floatformat:0|default:"0" }} FCFA
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<div class="card fade-in-up">
+    <div class="card-header">
+        <h5><i class="bi bi-search"></i> Rechercher et filtrer</h5>
+    </div>
+    <div class="card-body">
+        <form method="get" class="mb-4">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <div class="input-group">
+                        <span class="input-group-text" style="background: linear-gradient(135deg, #0f766e, #14b8a6); color: white; border: none;">
+                            <i class="bi bi-search"></i>
+                        </span>
+                        <input type="text" name="q" class="form-control" placeholder="Rechercher par nom, fabricant..." value="{{ query }}">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <select name="categorie" class="form-select">
+                        <option value="">📦 Toutes les catégories</option>
+                        {% for cat in categories %}
+                        <option value="{{ cat.id }}" {% if categorie_id == cat.id|stringformat:"s" %}selected{% endif %}>{{ cat.nom }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% if user.is_staff %}
+                <div class="col-md-3">
+                    <select name="user" class="form-select">
+                        <option value="">👤 Tous les utilisateurs</option>
+                        {% for u in all_users %}
+                        <option value="{{ u.id }}" {% if user_filter == u.id|stringformat:"s" %}selected{% endif %}>{{ u.username }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% endif %}
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-search"></i> Filtrer
+                    </button>
+                </div>
+            </div>
+        </form>
+
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th><i class="bi bi-capsule"></i> Médicament</th>
+                        <th><i class="bi bi-tag"></i> Catégorie</th>
+                        <th><i class="bi bi-currency-exchange"></i> Prix unitaire</th>
+                        <th><i class="bi bi-box-seam"></i> Stock</th>
+                        <th><i class="bi bi-calendar-event"></i> Date d'expiration</th>
+                        {% if user.is_staff %}
+                        <th><i class="bi bi-person-plus"></i> Ajouté par</th>
+                        {% endif %}
+                        <th><i class="bi bi-info-circle"></i> Statut</th>
+                        <th><i class="bi bi-gear"></i> Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for med in medicaments %}
+                    <tr class="fade-in-up">
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="me-3" style="width: 40px; height: 40px; background: linear-gradient(135deg, #d1fae5, #a7f3d0); border-radius: 10px; display: flex; align-items: center; justify-content: center;">
+                                    <i class="bi bi-capsule-pill" style="color: #0f766e; font-size: 1.3rem;"></i>
+                                </div>
+                                <div>
+                                    <strong style="color: #0f766e;">{{ med.nom }}</strong><br>
+                                    <small class="text-muted"><i class="bi bi-building"></i> {{ med.fabricant }}</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td><span class="badge" style="background: linear-gradient(135deg, #d1fae5, #a7f3d0); color: #0f766e;">{{ med.categorie.nom|default:"Non catégorisé" }}</span></td>
+                        <td><strong style="color: #059669;">{{ med.prix_unitaire }} FCFA</strong></td>
+                        <td>
+                            {% if med.est_en_rupture %}
+                            <span class="badge bg-danger" style="font-size: 0.9rem; padding: 8px 16px;">
+                                <i class="bi bi-x-circle"></i> {{ med.quantite_stock }}
+                            </span>
+                            {% elif med.necessite_alerte %}
+                            <span class="badge bg-warning" style="font-size: 0.9rem; padding: 8px 16px;">
+                                <i class="bi bi-exclamation-triangle"></i> {{ med.quantite_stock }}
+                            </span>
+                            {% else %}
+                            <span class="badge bg-success" style="font-size: 0.9rem; padding: 8px 16px;">
+                                <i class="bi bi-check-circle"></i> {{ med.quantite_stock }}
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <i class="bi bi-calendar3"></i> {{ med.date_expiration|date:"d/m/Y" }}
+                            {% if med.est_expire %}
+                            <br><span class="badge bg-danger mt-1"><i class="bi bi-exclamation-octagon"></i> Expiré</span>
+                            {% endif %}
+                        </td>
+                        {% if user.is_staff %}
+                        <td>
+                            {% if med.created_by %}
+                            <span class="badge" style="background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white;">
+                                <i class="bi bi-person-check"></i> {{ med.created_by.username }}
+                            </span>
+                            {% else %}
+                            <span class="text-muted"><i class="bi bi-question-circle"></i> Inconnu</span>
+                            {% endif %}
+                        </td>
+                        {% endif %}
+                        <td>
+                            {% if med.est_en_rupture %}
+                            <span class="badge" style="background: linear-gradient(135deg, #dc2626, #ef4444); padding: 8px 16px;">
+                                <i class="bi bi-x-circle-fill"></i> Rupture
+                            </span>
+                            {% elif med.necessite_alerte %}
+                            <span class="badge" style="background: linear-gradient(135deg, #f59e0b, #fbbf24); padding: 8px 16px;">
+                                <i class="bi bi-exclamation-triangle-fill"></i> Stock faible
+                            </span>
+                            {% else %}
+                            <span class="badge" style="background: linear-gradient(135deg, #059669, #10b981); padding: 8px 16px;">
+                                <i class="bi bi-check-circle-fill"></i> Disponible
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group" role="group">
+                                <a href="{% url 'pharmacy:detail_medicament' med.id %}" class="btn btn-sm btn-info" title="Voir détails">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <a href="{% url 'pharmacy:modifier_medicament' med.id %}" class="btn btn-sm btn-warning" title="Modifier">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <a href="{% url 'pharmacy:supprimer_medicament' med.id %}" class="btn btn-sm btn-danger" title="Supprimer">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center py-5">
+                            <i class="bi bi-inbox" style="font-size: 4rem; color: #cbd5e1;"></i>
+                            <p class="text-muted mt-3">Aucun médicament trouvé</p>
+                            <a href="{% url 'pharmacy:ajouter_medicament' %}" class="btn btn-success mt-2">
+                                <i class="bi bi-plus-circle"></i> Ajouter un médicament
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,693 @@
+{% extends 'pharmacy/base.html' %}
+{% load static %}
+
+{% block title %}Chiffres d'Affaires - Administration{% endblock %}
+
+{% block content %}
+<style>
+    /* Classes pour les cartes bénéfice */
+    .benefice-card-positif {
+        background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+    }
+    .benefice-card-negatif {
+        background: linear-gradient(135deg, #fecaca, #fca5a5);
+    }
+    .benefice-icon-positif {
+        font-size: 3rem;
+        color: #065f46;
+    }
+    .benefice-icon-negatif {
+        font-size: 3rem;
+        color: #991b1b;
+    }
+    .benefice-text-positif {
+        color: #065f46;
+    }
+    .benefice-text-negatif {
+        color: #991b1b;
+    }
+    
+    /* Classes pour les badges de marge bénéficiaire */
+    .badge-marge-excellent {
+        background: linear-gradient(135deg, #059669, #10b981);
+        color: white;
+        font-weight: 600;
+    }
+    .badge-marge-bon {
+        background: linear-gradient(135deg, #f59e0b, #fbbf24);
+        color: white;
+        font-weight: 600;
+    }
+    .badge-marge-faible {
+        background: linear-gradient(135deg, #dc2626, #ef4444);
+        color: white;
+        font-weight: 600;
+    }
+    
+    /* Classes pour les badges de ROI */
+    .badge-roi-excellent {
+        background: linear-gradient(135deg, #7c3aed, #a78bfa);
+        color: white;
+        font-weight: 600;
+    }
+    .badge-roi-bon {
+        background: linear-gradient(135deg, #2563eb, #60a5fa);
+        color: white;
+        font-weight: 600;
+    }
+    .badge-roi-faible {
+        background: linear-gradient(135deg, #64748b, #94a3b8);
+        color: white;
+        font-weight: 600;
+    }
+</style>
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h2">
+            <i class="bi bi-graph-up-arrow"></i> Chiffres d'Affaires et Investissements
+        </h1>
+        <a href="{% url 'pharmacy:admin_dashboard' %}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Retour
+        </a>
+    </div>
+
+    <!-- Filtre de période -->
+    <div class="card mb-4 fade-in-up">
+        <div class="card-header" style="background: linear-gradient(135deg, #0f766e, #14b8a6);">
+            <h5 class="mb-0 text-white">
+                <i class="bi bi-calendar-range"></i> Sélectionner la période d'analyse
+            </h5>
+        </div>
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-10">
+                    <select name="periode" class="form-select form-select-lg">
+                        <option value="7" {% if periode == 7 %}selected{% endif %}>7 derniers jours</option>
+                        <option value="15" {% if periode == 15 %}selected{% endif %}>15 derniers jours</option>
+                        <option value="20" {% if periode == 20 %}selected{% endif %}>20 derniers jours</option>
+                        <option value="30" {% if periode == 30 %}selected{% endif %}>30 derniers jours (1 mois)</option>
+                        <option value="60" {% if periode == 60 %}selected{% endif %}>60 derniers jours (2 mois)</option>
+                        <option value="90" {% if periode == 90 %}selected{% endif %}>90 derniers jours (3 mois)</option>
+                        <option value="180" {% if periode == 180 %}selected{% endif %}>180 derniers jours (6 mois)</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100 btn-lg">
+                        <i class="bi bi-search"></i> Analyser
+                    </button>
+                </div>
+            </form>
+            <div class="mt-3 text-muted">
+                <i class="bi bi-info-circle"></i> 
+                Analyse du <strong>{{ date_debut|date:"d/m/Y" }}</strong> au <strong>{{ date_fin|date:"d/m/Y" }}</strong>
+                ({{ periode }} jours)
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistiques globales -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card fade-in-up h-100" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#investirModal">
+                <div class="card-body text-center" style="background: linear-gradient(135deg, #dbeafe, #bfdbfe); transition: transform 0.2s;">
+                    <i class="bi bi-wallet2" style="font-size: 3rem; color: #1e40af;"></i>
+                    <h3 class="mt-3" style="color: #1e40af;">{{ total_investissement|floatformat:0 }} FCFA</h3>
+                    <p class="text-muted mb-0">Investissement Total Actuel</p>
+                    <small class="text-primary"><i class="bi bi-plus-circle"></i> Cliquez pour investir</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card fade-in-up h-100">
+                <div class="card-body text-center" style="background: linear-gradient(135deg, #ddd6fe, #c4b5fd);">
+                    <i class="bi bi-cash-stack" style="font-size: 3rem; color: #6b21a8;"></i>
+                    <h3 class="mt-3" style="color: #6b21a8;">{{ total_revenus|floatformat:0 }} FCFA</h3>
+                    <p class="text-muted mb-0">Revenus ({{ periode }} jours)</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card fade-in-up h-100">
+                <div class="card-body text-center benefice-card-{% if total_benefice >= 0 %}positif{% else %}negatif{% endif %}">
+                    <i class="bi bi-{% if total_benefice >= 0 %}graph-up-arrow{% else %}graph-down-arrow{% endif %} benefice-icon-{% if total_benefice >= 0 %}positif{% else %}negatif{% endif %}"></i>
+                    <h3 class="mt-3 benefice-text-{% if total_benefice >= 0 %}positif{% else %}negatif{% endif %}">{{ total_benefice|floatformat:0 }} FCFA</h3>
+                    <p class="text-muted mb-0">Bénéfice Total</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal pour investir -->
+    <div class="modal fade" id="investirModal" tabindex="-1" aria-labelledby="investirModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header" style="background: linear-gradient(135deg, #0f766e, #14b8a6);">
+                    <h5 class="modal-title text-white" id="investirModalLabel">
+                        <i class="bi bi-plus-circle"></i> Investir pour un Utilisateur
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Zone de sélection d'utilisateur -->
+                    <div id="selectionZone">
+                        <p class="text-muted">
+                            <i class="bi bi-info-circle"></i> 
+                            Sélectionnez un utilisateur pour investir dans son stock
+                        </p>
+                        
+                        <!-- Onglets -->
+                    <ul class="nav nav-tabs mb-3" id="investirTab" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="urgent-tab" data-bs-toggle="tab" data-bs-target="#urgent" type="button" role="tab">
+                                <i class="bi bi-exclamation-triangle"></i> Urgent ({{ users_stats|length }})
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="tous-tab" data-bs-toggle="tab" data-bs-target="#tous" type="button" role="tab">
+                                <i class="bi bi-people"></i> Tous les Utilisateurs
+                            </button>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content" id="investirTabContent">
+                        <!-- Onglet Urgent -->
+                        <div class="tab-pane fade show active" id="urgent" role="tabpanel">
+                            <div class="list-group">
+                                {% for stat in users_stats %}
+                                {% if stat.medicaments_rupture > 0 or stat.medicaments_alerte > 0 %}
+                                <button type="button" class="list-group-item list-group-item-action user-select-btn" 
+                                        data-user-id="{{ stat.user.id }}" 
+                                        data-user-name="{{ stat.user.username }}"
+                                        data-investissement="{{ stat.investissement_actuel|floatformat:0 }}"
+                                        data-benefice="{{ stat.benefice|floatformat:0 }}"
+                                        data-rupture="{{ stat.medicaments_rupture }}"
+                                        data-alerte="{{ stat.medicaments_alerte }}">
+                                    <div class="d-flex w-100 justify-content-between align-items-center">
+                                        <div>
+                                            <h6 class="mb-1">
+                                                <i class="bi bi-person-circle"></i> 
+                                                <strong>{{ stat.user.username }}</strong>
+                                            </h6>
+                                            <p class="mb-1">
+                                                {% if stat.medicaments_rupture > 0 %}
+                                                <span class="badge bg-danger">
+                                                    <i class="bi bi-x-circle"></i> {{ stat.medicaments_rupture }} rupture{{ stat.medicaments_rupture|pluralize }}
+                                                </span>
+                                                {% endif %}
+                                                {% if stat.medicaments_alerte > 0 %}
+                                                <span class="badge bg-warning">
+                                                    <i class="bi bi-exclamation-triangle"></i> {{ stat.medicaments_alerte }} alerte{{ stat.medicaments_alerte|pluralize }}
+                                                </span>
+                                                {% endif %}
+                                            </p>
+                                            <small class="text-muted">
+                                                Investissement: {{ stat.investissement_actuel|floatformat:0 }} FCFA | 
+                                                Bénéfice: {{ stat.benefice|floatformat:0 }} FCFA
+                                                {% if stat.benefice >= 0 and stat.marge_beneficiaire >= 20 %}
+                                                <span class="badge bg-success ms-2">
+                                                    <i class="bi bi-check-circle"></i> Recommandé
+                                                </span>
+                                                {% endif %}
+                                            </small>
+                                        </div>
+                                        <div>
+                                            <i class="bi bi-arrow-right-circle" style="font-size: 2rem; color: #0f766e;"></i>
+                                        </div>
+                                    </div>
+                                </button>
+                                {% endif %}
+                                {% endfor %}
+                                
+                                {% if not users_stats or users_stats|length == 0 %}
+                                <div class="text-center py-5">
+                                    <i class="bi bi-check-circle" style="font-size: 4rem; color: #10b981;"></i>
+                                    <p class="text-muted mt-3">Aucune alerte de stock urgente</p>
+                                    <small>Tous les stocks sont suffisants</small>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Onglet Tous les Utilisateurs -->
+                        <div class="tab-pane fade" id="tous" role="tabpanel">
+                            <div class="mb-3">
+                                <input type="text" class="form-control" id="searchUser" placeholder="🔍 Rechercher un utilisateur...">
+                            </div>
+                            <div class="list-group" id="userList">
+                                {% for stat in users_stats %}
+                                <button type="button" class="list-group-item list-group-item-action user-item user-select-btn" 
+                                        data-username="{{ stat.user.username|lower }}"
+                                        data-user-id="{{ stat.user.id }}" 
+                                        data-user-name="{{ stat.user.username }}"
+                                        data-investissement="{{ stat.investissement_actuel|floatformat:0 }}"
+                                        data-benefice="{{ stat.benefice|floatformat:0 }}"
+                                        data-rupture="{{ stat.medicaments_rupture }}"
+                                        data-alerte="{{ stat.medicaments_alerte }}">
+                                    <div class="d-flex w-100 justify-content-between align-items-center">
+                                        <div class="flex-grow-1">
+                                            <div class="d-flex align-items-center mb-2">
+                                                <div class="me-2" style="width: 40px; height: 40px; background: linear-gradient(135deg, #dbeafe, #bfdbfe); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                                                    <i class="bi bi-person-fill" style="color: #1e40af; font-size: 1.2rem;"></i>
+                                                </div>
+                                                <div>
+                                                    <h6 class="mb-0">
+                                                        <strong>{{ stat.user.username }}</strong>
+                                                        {% if stat.user.first_name %}
+                                                        <span class="text-muted">- {{ stat.user.first_name }} {{ stat.user.last_name }}</span>
+                                                        {% endif %}
+                                                    </h6>
+                                                    <small class="text-muted">{{ stat.user.email }}</small>
+                                                </div>
+                                            </div>
+                                            <div class="row g-2 mb-2">
+                                                <div class="col-md-6">
+                                                    <small class="text-muted">
+                                                        <i class="bi bi-wallet2"></i> Investissement: 
+                                                        <strong>{{ stat.investissement_actuel|floatformat:0 }} FCFA</strong>
+                                                    </small>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <small class="text-muted">
+                                                        <i class="bi bi-graph-up"></i> Bénéfice: 
+                                                        <strong class="benefice-text-{% if stat.benefice >= 0 %}positif{% else %}negatif{% endif %}">
+                                                            {{ stat.benefice|floatformat:0 }} FCFA
+                                                        </strong>
+                                                    </small>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                {% if stat.medicaments_rupture > 0 %}
+                                                <span class="badge bg-danger">
+                                                    <i class="bi bi-x-circle"></i> {{ stat.medicaments_rupture }} rupture{{ stat.medicaments_rupture|pluralize }}
+                                                </span>
+                                                {% endif %}
+                                                {% if stat.medicaments_alerte > 0 %}
+                                                <span class="badge bg-warning">
+                                                    <i class="bi bi-exclamation-triangle"></i> {{ stat.medicaments_alerte }} alerte{{ stat.medicaments_alerte|pluralize }}
+                                                </span>
+                                                {% endif %}
+                                                {% if stat.medicaments_rupture == 0 and stat.medicaments_alerte == 0 %}
+                                                <span class="badge bg-success">
+                                                    <i class="bi bi-check-circle"></i> Stock OK
+                                                </span>
+                                                {% endif %}
+                                                {% if stat.nb_ventes_periode == 0 %}
+                                                <span class="badge bg-info">
+                                                    <i class="bi bi-star"></i> Nouveau
+                                                </span>
+                                                {% endif %}
+                                                {% if stat.benefice >= 0 and stat.marge_beneficiaire >= 20 %}
+                                                <span class="badge bg-success">
+                                                    <i class="bi bi-trophy"></i> Rentable
+                                                </span>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <i class="bi bi-arrow-right-circle" style="font-size: 2rem; color: #0f766e;"></i>
+                                        </div>
+                                    </div>
+                                </button>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    </div>
+                    
+                    <!-- Formulaire d'investissement (caché par défaut) -->
+                    <div id="formulaireInvestissement" style="display: none;">
+                        <div class="alert alert-info">
+                            <i class="bi bi-arrow-left-circle" id="retourSelection" style="cursor: pointer; font-size: 1.5rem; float: left; margin-right: 10px;"></i>
+                            <strong>Investissement pour: <span id="selectedUserName"></span></strong>
+                        </div>
+                        
+                        <form method="post" action="{% url 'pharmacy:creer_investissement' %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="user_id" id="investUserIdField">
+                            
+                            <div class="row g-3">
+                                <div class="col-md-12">
+                                    <label for="montant" class="form-label">
+                                        <i class="bi bi-cash-stack"></i> Montant de l'investissement (FCFA) *
+                                    </label>
+                                    <input type="number" class="form-control form-control-lg" id="montant" name="montant" 
+                                           required min="1000" step="100" placeholder="Ex: 50000">
+                                    <div class="form-text">Minimum: 1,000 FCFA</div>
+                                </div>
+                                
+                                <div class="col-md-12">
+                                    <label for="duree" class="form-label">
+                                        <i class="bi bi-calendar-range"></i> Durée de l'investissement (jours) *
+                                    </label>
+                                    <select class="form-select form-select-lg" id="duree" name="duree" required>
+                                        <option value="">Choisir une durée</option>
+                                        <option value="7">7 jours</option>
+                                        <option value="15">15 jours</option>
+                                        <option value="20">20 jours</option>
+                                        <option value="30">30 jours (1 mois)</option>
+                                        <option value="60">60 jours (2 mois)</option>
+                                        <option value="90">90 jours (3 mois)</option>
+                                        <option value="180">180 jours (6 mois)</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="col-md-12">
+                                    <label for="taux_interet" class="form-label">
+                                        <i class="bi bi-percent"></i> Taux d'intérêt annuel (%)
+                                    </label>
+                                    <input type="number" class="form-control form-control-lg" id="taux_interet" name="taux_interet" 
+                                           value="10" min="0" max="100" step="0.1" placeholder="Ex: 10">
+                                    <div class="form-text">Taux d'intérêt par défaut: 10%</div>
+                                </div>
+                                
+                                <div class="col-md-12">
+                                    <label for="description" class="form-label">
+                                        <i class="bi bi-chat-left-text"></i> Description / Motif
+                                    </label>
+                                    <textarea class="form-control" id="description" name="description" 
+                                              rows="3" placeholder="Ex: Investissement pour réapprovisionner le stock de médicaments en alerte"></textarea>
+                                </div>
+                                
+                                <!-- Calcul automatique du ROI estimé -->
+                                <div class="col-md-12">
+                                    <div class="card bg-light">
+                                        <div class="card-body">
+                                            <h6 class="card-title">
+                                                <i class="bi bi-calculator"></i> Estimation des retours
+                                            </h6>
+                                            <div class="row g-2">
+                                                <div class="col-md-6">
+                                                    <small class="text-muted">Intérêts estimés:</small>
+                                                    <div class="h5 mb-0" id="interetsEstimes">0 FCFA</div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <small class="text-muted">Retour total estimé:</small>
+                                                    <div class="h5 mb-0 text-success" id="retourTotal">0 FCFA</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="d-grid gap-2 mt-4">
+                                <button type="submit" class="btn btn-primary btn-lg">
+                                    <i class="bi bi-check-circle"></i> Confirmer l'investissement
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                    
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle"></i> Fermer
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistiques par utilisateur -->
+    <div class="card fade-in-up">
+        <div class="card-header" style="background: linear-gradient(135deg, #0f766e, #14b8a6);">
+            <h5 class="mb-0 text-white">
+                <i class="bi bi-people"></i> Analyse Détaillée par Utilisateur
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th><i class="bi bi-person"></i> Utilisateur</th>
+                            <th><i class="bi bi-wallet"></i> Investissement Actuel</th>
+                            <th><i class="bi bi-exclamation-triangle"></i> Alertes Stock</th>
+                            <th><i class="bi bi-cart"></i> Ventes ({{ periode }}j)</th>
+                            <th><i class="bi bi-cash"></i> Revenus</th>
+                            <th><i class="bi bi-currency-dollar"></i> Coût Vendus</th>
+                            <th><i class="bi bi-graph-up"></i> Bénéfice</th>
+                            <th><i class="bi bi-percent"></i> Marge %</th>
+                            <th><i class="bi bi-arrow-return-right"></i> ROI %</th>
+                            <th><i class="bi bi-clipboard-check"></i> Décision</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for stat in users_stats %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="me-2" style="width: 35px; height: 35px; background: linear-gradient(135deg, #dbeafe, #bfdbfe); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                                        <i class="bi bi-person-fill" style="color: #1e40af;"></i>
+                                    </div>
+                                    <strong>{{ stat.user.username }}</strong>
+                                </div>
+                            </td>
+                            <td>
+                                <strong style="color: #1e40af;">{{ stat.investissement_actuel|floatformat:0 }}</strong>
+                                <small class="text-muted">FCFA</small>
+                            </td>
+                            <td>
+                                {% if stat.medicaments_rupture > 0 %}
+                                <span class="badge bg-danger">
+                                    <i class="bi bi-x-circle"></i> {{ stat.medicaments_rupture }} rupture{{ stat.medicaments_rupture|pluralize }}
+                                </span>
+                                {% endif %}
+                                {% if stat.medicaments_alerte > 0 %}
+                                <span class="badge bg-warning">
+                                    <i class="bi bi-exclamation-triangle"></i> {{ stat.medicaments_alerte }} alerte{{ stat.medicaments_alerte|pluralize }}
+                                </span>
+                                {% endif %}
+                                {% if stat.medicaments_rupture == 0 and stat.medicaments_alerte == 0 %}
+                                <span class="badge bg-success">
+                                    <i class="bi bi-check-circle"></i> OK
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge" style="background: linear-gradient(135deg, #6366f1, #8b5cf6); font-size: 0.9rem;">
+                                    {{ stat.nb_ventes_periode }}
+                                </span>
+                            </td>
+                            <td>
+                                <strong style="color: #059669;">{{ stat.revenus_periode|floatformat:0 }}</strong>
+                                <small class="text-muted">FCFA</small>
+                            </td>
+                            <td>
+                                <strong style="color: #dc2626;">{{ stat.cout_medicaments_vendus|floatformat:0 }}</strong>
+                                <small class="text-muted">FCFA</small>
+                            </td>
+                            <td>
+                                <strong class="benefice-text-{% if stat.benefice >= 0 %}positif{% else %}negatif{% endif %}">
+                                    {{ stat.benefice|floatformat:0 }}
+                                </strong>
+                                <small class="text-muted">FCFA</small>
+                            </td>
+                            <td>
+                                <span class="badge badge-marge-{% if stat.marge_beneficiaire >= 50 %}excellent{% elif stat.marge_beneficiaire >= 20 %}bon{% else %}faible{% endif %}">
+                                    {{ stat.marge_beneficiaire|floatformat:1 }}%
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge badge-roi-{% if stat.roi >= 30 %}excellent{% elif stat.roi >= 10 %}bon{% else %}faible{% endif %}">
+                                    {{ stat.roi|floatformat:1 }}%
+                                </span>
+                            </td>
+                            <td>
+                                {% if stat.medicaments_rupture > 0 or stat.medicaments_alerte > 0 %}
+                                    {% if stat.benefice >= 0 and stat.marge_beneficiaire >= 20 %}
+                                    <span class="badge bg-success">
+                                        <i class="bi bi-check-circle-fill"></i> Réinvestir
+                                    </span>
+                                    {% elif stat.benefice >= 0 %}
+                                    <span class="badge bg-warning">
+                                        <i class="bi bi-exclamation-triangle-fill"></i> Attendre
+                                    </span>
+                                    {% else %}
+                                    <span class="badge bg-danger">
+                                        <i class="bi bi-x-circle-fill"></i> Pas maintenant
+                                    </span>
+                                    {% endif %}
+                                {% else %}
+                                <span class="badge bg-secondary">
+                                    <i class="bi bi-dash-circle"></i> Stock OK
+                                </span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="10" class="text-center py-5">
+                                <i class="bi bi-inbox" style="font-size: 4rem; color: #cbd5e1;"></i>
+                                <p class="text-muted mt-3">Aucun utilisateur actif</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Légende -->
+    <div class="card mt-4 fade-in-up">
+        <div class="card-header bg-info text-white">
+            <h5 class="mb-0"><i class="bi bi-info-circle"></i> Légende et Recommandations</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <h6><strong>Marge Bénéficiaire :</strong></h6>
+                    <ul>
+                        <li><span class="badge bg-success">≥ 50%</span> Excellente marge</li>
+                        <li><span class="badge bg-warning">20% - 49%</span> Marge acceptable</li>
+                        <li><span class="badge bg-danger">< 20%</span> Marge faible</li>
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <h6><strong>ROI (Retour sur Investissement) :</strong></h6>
+                    <ul>
+                        <li><span class="badge bg-success">≥ 30%</span> Excellent retour</li>
+                        <li><span class="badge bg-warning">10% - 29%</span> Retour correct</li>
+                        <li><span class="badge bg-danger">< 10%</span> Retour faible</li>
+                    </ul>
+                </div>
+            </div>
+            <hr>
+            <div class="alert alert-info mb-0">
+                <h6><i class="bi bi-lightbulb"></i> Critères de décision pour réinvestir :</h6>
+                <ul class="mb-0">
+                    <li><strong>Réinvestir :</strong> Bénéfice positif + Marge ≥ 20% + Alertes stock présentes</li>
+                    <li><strong>Attendre :</strong> Bénéfice positif mais marge faible (< 20%)</li>
+                    <li><strong>Pas maintenant :</strong> Bénéfice négatif ou pertes</li>
+                    <li><strong>Stock OK :</strong> Aucune alerte de stock, pas besoin de réinvestir</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.fade-in-up {
+    animation: fadeInUp 0.6s ease-out;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.table th {
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.table td {
+    vertical-align: middle;
+}
+
+.card[data-bs-toggle="modal"]:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.list-group-item:hover {
+    background-color: #f0fdfa;
+}
+</style>
+
+<script>
+// Recherche d'utilisateurs
+document.getElementById('searchUser')?.addEventListener('keyup', function(e) {
+    const searchTerm = e.target.value.toLowerCase();
+    const userItems = document.querySelectorAll('.user-item');
+    
+    userItems.forEach(item => {
+        const username = item.getAttribute('data-username');
+        if (username.includes(searchTerm)) {
+            item.style.display = '';
+        } else {
+            item.style.display = 'none';
+        }
+    });
+});
+
+// Compter les utilisateurs urgents au chargement
+document.addEventListener('DOMContentLoaded', function() {
+    const urgentItems = document.querySelectorAll('#urgent .list-group-item');
+    const urgentTab = document.querySelector('#urgent-tab');
+    if (urgentTab && urgentItems.length > 0) {
+        urgentTab.innerHTML = '<i class="bi bi-exclamation-triangle"></i> Urgent (' + urgentItems.length + ')';
+    } else if (urgentTab) {
+        urgentTab.innerHTML = '<i class="bi bi-exclamation-triangle"></i> Urgent (0)';
+    }
+    
+    // Gestion de la sélection d'utilisateur
+    const userSelectBtns = document.querySelectorAll('.user-select-btn');
+    const selectionZone = document.getElementById('selectionZone');
+    const formulaireZone = document.getElementById('formulaireInvestissement');
+    const selectedUserNameSpan = document.getElementById('selectedUserName');
+    const investUserIdField = document.getElementById('investUserIdField');
+    const retourBtn = document.getElementById('retourSelection');
+    const montantInput = document.getElementById('montant');
+    const dureeSelect = document.getElementById('duree');
+    const tauxInput = document.getElementById('taux_interet');
+    const interetsEstimesDiv = document.getElementById('interetsEstimes');
+    const retourTotalDiv = document.getElementById('retourTotal');
+    
+    // Fonction pour calculer les intérêts
+    function calculerInterets() {
+        const montant = parseFloat(montantInput.value) || 0;
+        const duree = parseInt(dureeSelect.value) || 0;
+        const taux = parseFloat(tauxInput.value) || 0;
+        
+        // Calcul des intérêts: (montant * taux * duree) / 365 / 100
+        const interets = (montant * taux * duree) / 365 / 100;
+        const retourTotal = montant + interets;
+        
+        interetsEstimesDiv.textContent = Math.round(interets).toLocaleString('fr-FR') + ' FCFA';
+        retourTotalDiv.textContent = Math.round(retourTotal).toLocaleString('fr-FR') + ' FCFA';
+    }
+    
+    // Écouteurs pour le calcul automatique
+    montantInput?.addEventListener('input', calculerInterets);
+    dureeSelect?.addEventListener('change', calculerInterets);
+    tauxInput?.addEventListener('input', calculerInterets);
+    
+    // Afficher le formulaire quand un utilisateur est sélectionné
+    userSelectBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const userId = this.getAttribute('data-user-id');
+            const userName = this.getAttribute('data-user-name');
+            
+            // Remplir les informations
+            selectedUserNameSpan.textContent = userName;
+            investUserIdField.value = userId;
+            
+            // Basculer l'affichage
+            selectionZone.style.display = 'none';
+            formulaireZone.style.display = 'block';
+            
+            // Réinitialiser le formulaire
+            document.querySelector('#formulaireInvestissement form').reset();
+            investUserIdField.value = userId; // Re-remplir après reset
+            calculerInterets();
+        });
+    });
+    
+    // Retour à la sélection
+    retourBtn?.addEventListener('click', function() {
+        selectionZone.style.display = 'block';
+        formulaireZone.style.display = 'none';
+    });
+});
+</script>
+{% endblock %}

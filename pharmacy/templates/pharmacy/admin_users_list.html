@@ -1,0 +1,116 @@
+{% extends 'pharmacy/base.html' %}
+{% load static %}
+
+{% block title %}Gestion des Utilisateurs{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h2"><i class="fas fa-users-cog"></i> Gestion des Utilisateurs</h1>
+        <a href="{% url 'pharmacy:admin_dashboard' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Retour
+        </a>
+    </div>
+
+    <!-- Filtres -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <label for="search" class="form-label">Rechercher</label>
+                    <input type="text" class="form-control" id="search" name="search" value="{{ search }}" placeholder="Nom, prénom, email...">
+                </div>
+                <div class="col-md-3">
+                    <label for="is_active" class="form-label">Statut</label>
+                    <select class="form-select" id="is_active" name="is_active">
+                        <option value="">Tous</option>
+                        <option value="true" {% if is_active == 'true' %}selected{% endif %}>Actifs</option>
+                        <option value="false" {% if is_active == 'false' %}selected{% endif %}>Inactifs</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="is_staff" class="form-label">Type</label>
+                    <select class="form-select" id="is_staff" name="is_staff">
+                        <option value="">Tous</option>
+                        <option value="true" {% if is_staff == 'true' %}selected{% endif %}>Administrateurs</option>
+                        <option value="false" {% if is_staff == 'false' %}selected{% endif %}>Utilisateurs normaux</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">&nbsp;</label>
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-search"></i> Filtrer
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Liste des utilisateurs -->
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Liste des Utilisateurs ({{ users.count }})</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nom d'utilisateur</th>
+                            <th>Nom complet</th>
+                            <th>Email</th>
+                            <th>Type</th>
+                            <th>Statut</th>
+                            <th>Ventes</th>
+                            <th>Montant Total</th>
+                            <th>Activités</th>
+                            <th>Date d'inscription</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users %}
+                        <tr>
+                            <td>{{ user.id }}</td>
+                            <td><strong>{{ user.username }}</strong></td>
+                            <td>{{ user.first_name }} {{ user.last_name }}</td>
+                            <td>{{ user.email }}</td>
+                            <td>
+                                {% if user.is_superuser %}
+                                    <span class="badge bg-danger">Super Admin</span>
+                                {% elif user.is_staff %}
+                                    <span class="badge bg-warning">Admin</span>
+                                {% else %}
+                                    <span class="badge bg-info">Utilisateur</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if user.is_active %}
+                                    <span class="badge bg-success">Actif</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Inactif</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ user.total_ventes|default:0 }}</td>
+                            <td>{{ user.montant_ventes|default:0|floatformat:0 }} FCFA</td>
+                            <td>{{ user.total_activities|default:0 }}</td>
+                            <td>{{ user.date_joined|date:"d/m/Y" }}</td>
+                            <td>
+                                <a href="{% url 'pharmacy:admin_user_detail' user.id %}" class="btn btn-sm btn-info" title="Détails">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="11" class="text-center text-muted">Aucun utilisateur trouvé</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

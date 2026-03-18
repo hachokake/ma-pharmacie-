@@ -1,0 +1,38 @@
+{
+  "appId": "com.pharmacare.app",
+  "appName": "PharmaCare",
+  "webDir": "www",
+  "bundledWebRuntime": false,
+  "server": {
+    "url": "http://10.79.9.100:8000",
+    "cleartext": true,
+    "allowNavigation": [
+      "http://10.79.9.100:8000",
+      "http://localhost:8000",
+      "http://192.168.*",
+      "http://10.*"
+    ],
+    "androidScheme": "http"
+  },
+  "android": {
+    "backgroundColor": "#2E7D32",
+    "allowMixedContent": true,
+    "captureInput": true,
+    "webContentsDebuggingEnabled": true,
+    "overrideUserAgent": "PharmaCare-Android/1.0",
+    "appendUserAgent": "PharmaCareApp",
+    "permissions": [
+      "android.permission.CAMERA",
+      "android.permission.INTERNET",
+      "android.permission.ACCESS_NETWORK_STATE"
+    ]
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 2000,
+      "backgroundColor": "#0f766e",
+      "showSpinner": true,
+      "spinnerColor": "#ffffff"
+    }
+  }
+}

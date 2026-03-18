@@ -1,0 +1,77 @@
+{% extends 'pharmacy/base.html' %}
+
+{% block title %}Supprimer vente - Pharmacie{% endblock %}
+{% block page_title %}Confirmer la suppression{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card fade-in-up shadow-lg">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-exclamation-triangle"></i> Confirmer la suppression
+                </h5>
+            </div>
+            <div class="card-body p-4">
+                <div class="alert alert-warning" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                    <strong>Attention !</strong> Cette action va supprimer la vente et restaurer le stock des médicaments.
+                </div>
+
+                <p class="lead">Êtes-vous sûr de vouloir supprimer cette vente ?</p>
+
+                <div class="card bg-light mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title text-primary">
+                            <i class="bi bi-cart"></i> Vente #{{ vente.id }}
+                        </h5>
+                        <div class="mt-3">
+                            <div class="row">
+                                <div class="col-6">
+                                    <small class="text-muted">Date:</small><br>
+                                    <strong>{{ vente.date_vente|date:"d/m/Y H:i" }}</strong>
+                                </div>
+                                <div class="col-6">
+                                    <small class="text-muted">Montant total:</small><br>
+                                    <strong class="text-success">{{ vente.montant_total }} FCFA</strong>
+                                </div>
+                                <div class="col-6 mt-3">
+                                    <small class="text-muted">Client:</small><br>
+                                    <strong>{{ vente.client|default:"Vente sans client" }}</strong>
+                                </div>
+                                <div class="col-6 mt-3">
+                                    <small class="text-muted">Méthode de paiement:</small><br>
+                                    <strong>{{ vente.get_methode_paiement_display }}</strong>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-3">
+                                <small class="text-muted">Médicaments vendus:</small>
+                                <ul class="list-group mt-2">
+                                    {% for item in vente.items.all %}
+                                        <li class="list-group-item">
+                                            {{ item.medicament.nom }} - Quantité: {{ item.quantite }}
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'pharmacy:liste_ventes' %}" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i> Annuler
+                        </a>
+                        <button type="submit" class="btn btn-danger">
+                            <i class="bi bi-trash"></i> Oui, supprimer et restaurer le stock
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

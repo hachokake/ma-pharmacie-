@@ -1,0 +1,963 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- PWA Meta Tags -->
+    <meta name="description" content="Application de gestion de pharmacie professionnelle">
+    <meta name="theme-color" content="#0f766e">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="PharmaCare">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/static/manifest.json">
+    
+    <!-- PWA Icons -->
+    <link rel="icon" type="image/png" sizes="192x192" href="/static/icons/icon-192x192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="/static/icons/icon-512x512.png">
+    <link rel="apple-touch-icon" href="/static/icons/icon-192x192.png">
+    
+    <title>{% block title %}Gestion Pharmacie{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: #f0f8f5;
+            color: #2d3748;
+        }
+        
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+        }
+        
+        @keyframes shimmer {
+            0% {
+                background-position: -1000px 0;
+            }
+            100% {
+                background-position: 1000px 0;
+            }
+        }
+        
+        .fade-in-up {
+            animation: fadeInUp 0.6s ease-out;
+        }
+        
+        .slide-in-left {
+            animation: slideInLeft 0.5s ease-out;
+        }
+        
+        /* Sidebar avec thème vert */
+        .sidebar {
+            min-height: 100vh;
+            background: linear-gradient(180deg, #0f766e 0%, #14b8a6 50%, #2dd4bf 100%);
+            box-shadow: 4px 0 15px rgba(15, 118, 110, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .sidebar::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: pulse 8s ease-in-out infinite;
+        }
+        
+        .sidebar-header {
+            padding: 30px 20px;
+            text-align: center;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .sidebar-header h4 {
+            color: white;
+            font-weight: 700;
+            font-size: 1.5rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+            margin: 0;
+        }
+        
+        .sidebar-header .pharmacy-icon {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            display: block;
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        .sidebar .nav {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .sidebar .nav-link {
+            color: rgba(255, 255, 255, 0.9);
+            padding: 15px 25px;
+            margin: 8px 15px;
+            border-radius: 12px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .sidebar .nav-link::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+        
+        .sidebar .nav-link:hover::before {
+            left: 100%;
+        }
+        
+        .sidebar .nav-link:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateX(8px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        
+        .sidebar .nav-link.active {
+            background: rgba(255, 255, 255, 0.25);
+            color: white;
+            font-weight: 600;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            border-left: 4px solid #fff;
+        }
+        
+        .sidebar .nav-link i {
+            font-size: 1.3rem;
+        }
+        
+        /* Main Content */
+        .main-content {
+            padding: 30px;
+            background: #f0f8f5;
+        }
+        
+        .page-header {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%);
+            padding: 25px 30px;
+            border-radius: 16px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 20px rgba(15, 118, 110, 0.08);
+            animation: fadeInUp 0.5s ease-out;
+        }
+        
+        .page-header h2 {
+            color: #0f766e;
+            font-weight: 700;
+            margin: 0;
+            font-size: 2rem;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(15, 118, 110, 0.1);
+            padding: 10px 20px;
+            border-radius: 50px;
+            color: #0f766e;
+            font-weight: 500;
+        }
+        
+        .user-info i {
+            font-size: 1.5rem;
+        }
+        
+        /* Cards avec thème vert */
+        .card {
+            border: none;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+            background: white;
+            animation: fadeInUp 0.6s ease-out;
+        }
+        
+        .card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 40px rgba(15, 118, 110, 0.15);
+        }
+        
+        .stat-card {
+            padding: 25px;
+            margin-bottom: 25px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
+            transform: rotate(45deg);
+        }
+        
+        .stat-card:hover::before {
+            animation: shimmer 1.5s;
+        }
+        
+        .stat-card h5 {
+            font-weight: 600;
+            margin-bottom: 15px;
+            opacity: 0.95;
+        }
+        
+        .stat-card h2 {
+            font-weight: 700;
+            font-size: 2.5rem;
+            margin: 10px 0;
+        }
+        
+        .stat-card small {
+            opacity: 0.9;
+            font-weight: 500;
+        }
+        
+        .stat-icon {
+            font-size: 3rem;
+            opacity: 0.8;
+            transition: all 0.3s;
+        }
+        
+        .stat-card:hover .stat-icon {
+            transform: scale(1.1) rotate(5deg);
+        }
+        
+        /* Couleurs thème vert */
+        .bg-green-primary {
+            background: linear-gradient(135deg, #0f766e 0%, #14b8a6 100%);
+        }
+        
+        .bg-green-success {
+            background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+        }
+        
+        .bg-green-warning {
+            background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
+        }
+        
+        .bg-green-danger {
+            background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+        }
+        
+        .bg-green-info {
+            background: linear-gradient(135deg, #2dd4bf 0%, #5eead4 100%);
+        }
+        
+        /* Tables */
+        .table {
+            animation: fadeInUp 0.8s ease-out;
+        }
+        
+        .table thead {
+            background: linear-gradient(135deg, #0f766e 0%, #14b8a6 100%);
+            color: white;
+        }
+        
+        .table thead th {
+            border: none;
+            font-weight: 600;
+            padding: 15px;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 0.5px;
+        }
+        
+        .table tbody tr {
+            transition: all 0.3s;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .table tbody tr:hover {
+            background: linear-gradient(90deg, rgba(15, 118, 110, 0.05) 0%, rgba(20, 184, 166, 0.05) 100%);
+            transform: scale(1.01);
+            box-shadow: 0 2px 8px rgba(15, 118, 110, 0.1);
+        }
+        
+        .table tbody td {
+            padding: 15px;
+            vertical-align: middle;
+        }
+        
+        /* Badges */
+        .badge {
+            padding: 8px 16px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            letter-spacing: 0.3px;
+        }
+        
+        .badge.bg-success {
+            background: linear-gradient(135deg, #059669 0%, #10b981 100%) !important;
+        }
+        
+        .progress-bar.bg-success {
+            background: linear-gradient(90deg, #0f766e, #14b8a6) !important;
+            transition: width 1s ease-out;
+            width: 0;
+        }
+        
+        .badge.bg-warning {
+            background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%) !important;
+        }
+        
+        .badge.bg-danger {
+            background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%) !important;
+        }
+        
+        .badge.bg-info {
+            background: linear-gradient(135deg, #2dd4bf 0%, #5eead4 100%) !important;
+            color: #0f766e !important;
+        }
+        
+        /* Buttons */
+        .btn {
+            border-radius: 10px;
+            padding: 10px 24px;
+            font-weight: 600;
+            transition: all 0.3s;
+            border: none;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #0f766e 0%, #14b8a6 100%);
+            box-shadow: 0 4px 15px rgba(15, 118, 110, 0.3);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(15, 118, 110, 0.4);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, #6b7280 0%, #9ca3af 100%);
+        }
+        
+        /* Form inputs */
+        .form-control, .form-select {
+            border: 2px solid #d1fae5;
+            border-radius: 10px;
+            padding: 12px 16px;
+            transition: all 0.3s;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            border-color: #14b8a6;
+            box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.1);
+        }
+        
+        /* Card headers */
+        .card-header {
+            background: linear-gradient(135deg, #0f766e 0%, #14b8a6 100%);
+            color: white;
+            border: none;
+            padding: 20px;
+            font-weight: 600;
+        }
+        
+        .card-header h5 {
+            margin: 0;
+            font-weight: 600;
+        }
+        
+        /* Alerts */
+        .alert {
+            border: none;
+            border-radius: 12px;
+            padding: 16px 20px;
+            animation: fadeInUp 0.5s ease-out;
+        }
+        
+        /* Loading animation */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Scrollbar personnalisée */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f0fdf4;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #14b8a6 0%, #0f766e 100%);
+            border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, #0f766e 0%, #14b8a6 100%);
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-2 sidebar p-0">
+                <div class="sidebar-header slide-in-left">
+                    <i class="bi bi-hospital pharmacy-icon"></i>
+                    <h4>PharmaCare</h4>
+                </div>
+                <nav class="nav flex-column">
+                    <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" href="{% url 'pharmacy:dashboard' %}">
+                        <i class="bi bi-speedometer2"></i>
+                        <span>Tableau de bord</span>
+                    </a>
+                    {% if not user.is_staff %}
+                    <a class="nav-link {% if request.resolver_match.url_name == 'liste_medicaments' %}active{% endif %}" href="{% url 'pharmacy:liste_medicaments' %}">
+                        <i class="bi bi-capsule"></i>
+                        <span>Médicaments</span>
+                    </a>
+                    {% endif %}
+                    <a class="nav-link {% if request.resolver_match.url_name == 'stock_alerte' %}active{% endif %}" href="{% url 'pharmacy:stock_alerte' %}">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        <span>Alertes Stock</span>
+                    </a>
+                    {% if not user.is_staff %}
+                    <a class="nav-link {% if request.resolver_match.url_name == 'liste_ventes' %}active{% endif %}" href="{% url 'pharmacy:liste_ventes' %}">
+                        <i class="bi bi-cart"></i>
+                        <span>Ventes</span>
+                    </a>
+                    {% endif %}
+                    {% if user.is_staff %}
+                    <a class="nav-link {% if 'admin' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'pharmacy:admin_dashboard' %}">
+                        <i class="bi bi-shield-lock"></i>
+                        <span>Administration</span>
+                    </a>
+                    {% endif %}
+                    {% if user.is_authenticated %}
+                    <a class="nav-link" href="{% url 'pharmacy:logout' %}">
+                        <i class="bi bi-box-arrow-right"></i>
+                        <span>Déconnexion</span>
+                    </a>
+                    {% endif %}
+                </nav>
+            </div>
+
+            <!-- Main Content -->
+            <div class="col-md-10 main-content">
+                <div class="page-header d-flex justify-content-between align-items-center">
+                    <h2>{% block page_title %}Tableau de bord{% endblock %}</h2>
+                    <div class="user-info">
+                        <i class="bi bi-person-circle"></i>
+                        <span>{{ user.username }}</span>
+                    </div>
+                </div>
+
+                {% if messages %}
+                    {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                    {% endfor %}
+                {% endif %}
+
+                {% block content %}
+                {% endblock %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Bouton d'installation PWA -->
+    <button id="installButton" style="
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 9999;
+        background: linear-gradient(135deg, #0f766e 0%, #14b8a6 100%);
+        color: white;
+        border: none;
+        padding: 15px 25px;
+        border-radius: 50px;
+        font-weight: 600;
+        font-size: 1rem;
+        box-shadow: 0 4px 15px rgba(15, 118, 110, 0.4);
+        cursor: pointer;
+        display: none;
+        align-items: center;
+        gap: 10px;
+        transition: all 0.3s ease;
+        animation: pulse 2s infinite;
+    ">
+        <i class="bi bi-download"></i> 📲 Installer l'application
+    </button>
+    
+    <!-- Toast de confirmation d'installation -->
+    <div id="installToast" style="
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 10000;
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        display: none;
+        animation: slideInRight 0.5s ease;
+    ">
+        <div style="display: flex; align-items: center;">
+            <i class="bi bi-check-circle-fill text-success" style="font-size: 2rem; margin-right: 15px;"></i>
+            <div>
+                <h6 style="margin: 0;">Installation réussie !</h6>
+                <small class="text-muted">L'application est maintenant installée</small>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Animer les barres de progression
+        document.addEventListener('DOMContentLoaded', function() {
+            const progressBars = document.querySelectorAll('.progress-bar[data-percentage]');
+            progressBars.forEach(bar => {
+                const percentage = bar.getAttribute('data-percentage');
+                setTimeout(() => {
+                    bar.style.width = percentage + '%';
+                }, 100);
+            });
+        });
+    </script>
+    
+    <!-- Script PWA Installation -->
+    <script>
+        let deferredPrompt;
+        const installButton = document.getElementById('installButton');
+        const installToast = document.getElementById('installToast');
+
+        // Détecter si l'application peut être installée
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            installButton.style.display = 'flex';
+            console.log('💡 Application installable détectée');
+        });
+
+        // Afficher le bouton après 3 secondes si beforeinstallprompt ne s'est pas déclenché
+        // (utile sur mobile où l'événement peut être retardé)
+        setTimeout(() => {
+            if (!deferredPrompt && installButton.style.display === 'none') {
+                // Vérifier si on est sur mobile et pas déjà installé
+                const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+                const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+                
+                if (isMobile && !isStandalone) {
+                    installButton.style.display = 'flex';
+                    const browser = detectBrowser();
+                    const browserEmojis = {
+                        'chrome': '🟢',
+                        'edge': '🔵',
+                        'samsung': '🟣',
+                        'opera': '🔴',
+                        'firefox': '🟠'
+                    };
+                    console.log(`${browserEmojis[browser] || '📱'} Bouton d'installation affiché - ${browser}`);
+                }
+            }
+        }, 3000);
+
+        // Gérer le clic sur le bouton d'installation
+        installButton.addEventListener('click', async () => {
+            if (!deferredPrompt) {
+                // Si pas de prompt natif, afficher les instructions manuelles
+                showManualInstallInstructions();
+                return;
+            }
+
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            console.log(`👍 Choix utilisateur: ${outcome}`);
+
+            if (outcome === 'accepted') {
+                console.log('✅ Installation acceptée');
+                showInstallToast();
+            }
+
+            deferredPrompt = null;
+            installButton.style.display = 'none';
+        });
+
+        // Détecter le navigateur
+        function detectBrowser() {
+            const ua = navigator.userAgent.toLowerCase();
+            if (ua.includes('chrome') && !ua.includes('edge') && !ua.includes('opr')) return 'chrome';
+            if (ua.includes('edg')) return 'edge';
+            if (ua.includes('samsungbrowser')) return 'samsung';
+            if (ua.includes('opr') || ua.includes('opera')) return 'opera';
+            if (ua.includes('firefox')) return 'firefox';
+            if (ua.includes('ucbrowser')) return 'uc';
+            return 'other';
+        }
+
+        // Afficher les instructions d'installation manuelle adaptées au navigateur
+        function showManualInstallInstructions() {
+            const browser = detectBrowser();
+            let instructions = '';
+            let browserName = '';
+            let icon = '📱';
+            
+            switch(browser) {
+                case 'chrome':
+                    browserName = 'Chrome';
+                    icon = '🟢';
+                    instructions = `
+                        <p><strong>${icon} Sur Chrome Android :</strong></p>
+                        <ol style="margin-left: 20px; line-height: 1.8;">
+                            <li>Appuyez sur le menu <strong>⋮</strong> (3 points verticaux)</li>
+                            <li>Sélectionnez <strong>"Installer l'application"</strong> ou <strong>"Ajouter à l'écran d'accueil"</strong></li>
+                            <li>Confirmez l'installation</li>
+                            <li>L'icône PharmaCare apparaîtra sur votre écran d'accueil</li>
+                        </ol>
+                    `;
+                    break;
+                    
+                case 'edge':
+                    browserName = 'Edge';
+                    icon = '🔵';
+                    instructions = `
+                        <p><strong>${icon} Sur Microsoft Edge Android :</strong></p>
+                        <ol style="margin-left: 20px; line-height: 1.8;">
+                            <li>Appuyez sur le menu <strong>⋯</strong> (3 points)</li>
+                            <li>Sélectionnez <strong>"Ajouter à l'écran d'accueil"</strong></li>
+                            <li>Confirmez l'ajout</li>
+                            <li>PharmaCare sera accessible depuis votre écran d'accueil</li>
+                        </ol>
+                    `;
+                    break;
+                    
+                case 'samsung':
+                    browserName = 'Samsung Internet';
+                    icon = '🟣';
+                    instructions = `
+                        <p><strong>${icon} Sur Samsung Internet :</strong></p>
+                        <ol style="margin-left: 20px; line-height: 1.8;">
+                            <li>Appuyez sur le menu <strong>☰</strong> (3 lignes)</li>
+                            <li>Sélectionnez <strong>"Ajouter une page à"</strong></li>
+                            <li>Choisissez <strong>"Écran d'accueil"</strong></li>
+                            <li>Confirmez l'ajout</li>
+                        </ol>
+                    `;
+                    break;
+                    
+                case 'opera':
+                    browserName = 'Opera';
+                    icon = '🔴';
+                    instructions = `
+                        <p><strong>${icon} Sur Opera Android :</strong></p>
+                        <ol style="margin-left: 20px; line-height: 1.8;">
+                            <li>Appuyez sur le menu <strong>O</strong> (logo Opera)</li>
+                            <li>Sélectionnez <strong>"Écran d'accueil"</strong></li>
+                            <li>Appuyez sur <strong>"Ajouter"</strong></li>
+                            <li>PharmaCare sera sur votre écran d'accueil</li>
+                        </ol>
+                    `;
+                    break;
+                    
+                case 'firefox':
+                    browserName = 'Firefox';
+                    icon = '🟠';
+                    instructions = `
+                        <p><strong>${icon} Sur Firefox Android :</strong></p>
+                        <ol style="margin-left: 20px; line-height: 1.8;">
+                            <li>Appuyez sur le menu <strong>⋮</strong> (3 points)</li>
+                            <li>Sélectionnez <strong>"Installer"</strong> ou <strong>"Ajouter à l'écran d'accueil"</strong></li>
+                            <li>Confirmez l'ajout</li>
+                        </ol>
+                        <p style="color: #f59e0b; margin-top: 10px;">
+                            <strong>💡 Astuce :</strong> Pour une meilleure expérience, nous recommandons Chrome ou Edge.
+                        </p>
+                    `;
+                    break;
+                    
+                default:
+                    browserName = 'votre navigateur';
+                    icon = '📱';
+                    instructions = `
+                        <p><strong>${icon} Sur ${browserName} :</strong></p>
+                        <ol style="margin-left: 20px; line-height: 1.8;">
+                            <li>Ouvrez le menu du navigateur</li>
+                            <li>Cherchez <strong>"Ajouter à l'écran d'accueil"</strong> ou <strong>"Installer"</strong></li>
+                            <li>Confirmez l'ajout</li>
+                        </ol>
+                        <p style="color: #f59e0b; margin-top: 10px;">
+                            <strong>💡 Recommandation :</strong> Pour une installation optimale, utilisez Chrome, Edge ou Samsung Internet.
+                        </p>
+                    `;
+            }
+            
+            const instructionsDiv = document.createElement('div');
+            instructionsDiv.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: white;
+                padding: 30px;
+                border-radius: 15px;
+                box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+                z-index: 10001;
+                max-width: 90%;
+                width: 450px;
+                font-family: 'Poppins', sans-serif;
+                max-height: 90vh;
+                overflow-y: auto;
+            `;
+            
+            instructionsDiv.innerHTML = `
+                <div style="text-align: center;">
+                    <h3 style="color: #0f766e; margin-bottom: 20px;">
+                        <i class="bi bi-info-circle"></i> Installer PharmaCare
+                    </h3>
+                    <div style="text-align: left; margin-bottom: 20px;">
+                        ${instructions}
+                        
+                        <div style="background: #f0f9ff; border-left: 4px solid #0f766e; padding: 15px; margin-top: 20px; border-radius: 5px;">
+                            <p style="margin: 0; font-size: 14px;">
+                                <strong>✅ Compatible avec :</strong><br>
+                                Chrome, Edge, Samsung Internet, Opera, Firefox, et plus !
+                            </p>
+                        </div>
+                    </div>
+                    <button onclick="this.parentElement.parentElement.remove()" 
+                            style="background: #0f766e; color: white; border: none; padding: 12px 40px; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: 600;">
+                        J'ai compris
+                    </button>
+                </div>
+            `;
+            
+            document.body.appendChild(instructionsDiv);
+        }
+
+        // Détecter quand l'application a été installée
+        window.addEventListener('appinstalled', (e) => {
+            console.log('🎉 Application installée avec succès');
+            showInstallToast();
+            installButton.style.display = 'none';
+        });
+
+        // Afficher le toast de confirmation
+        function showInstallToast() {
+            installToast.style.display = 'block';
+            setTimeout(() => {
+                installToast.style.display = 'none';
+            }, 4000);
+        }
+
+        // Notification de mise à jour disponible
+        function showUpdateNotification() {
+            const updateBanner = document.createElement('div');
+            updateBanner.style.cssText = `
+                position: fixed;
+                top: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: linear-gradient(135deg, #0f766e 0%, #14b8a6 100%);
+                color: white;
+                padding: 15px 30px;
+                border-radius: 10px;
+                box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+                z-index: 10000;
+                display: flex;
+                align-items: center;
+                gap: 15px;
+                font-family: 'Poppins', sans-serif;
+                animation: slideDown 0.5s ease;
+            `;
+            
+            updateBanner.innerHTML = `
+                <i class="bi bi-arrow-clockwise" style="font-size: 24px;"></i>
+                <div>
+                    <strong>Mise à jour disponible !</strong>
+                    <p style="margin: 0; font-size: 14px;">Cliquez pour actualiser l'application</p>
+                </div>
+            `;
+            
+            updateBanner.onclick = () => {
+                // Activer le nouveau Service Worker
+                navigator.serviceWorker.getRegistration().then((reg) => {
+                    if (reg && reg.waiting) {
+                        reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+                    }
+                });
+            };
+            
+            document.body.appendChild(updateBanner);
+            
+            // Ajouter l'animation CSS
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes slideDown {
+                    from { transform: translate(-50%, -100px); opacity: 0; }
+                    to { transform: translate(-50%, 0); opacity: 1; }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+
+        // Enregistrer le Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/static/service-worker.js')
+                    .then((registration) => {
+                        console.log('✅ Service Worker enregistré:', registration.scope);
+                        
+                        // Diagnostic PWA
+                        const browser = detectBrowser();
+                        const browserNames = {
+                            'chrome': 'Chrome',
+                            'edge': 'Edge',
+                            'samsung': 'Samsung Internet',
+                            'opera': 'Opera',
+                            'firefox': 'Firefox',
+                            'uc': 'UC Browser',
+                            'other': 'Autre'
+                        };
+                        const isPWACompatible = ['chrome', 'edge', 'samsung', 'opera'].includes(browser);
+                        
+                        console.log('🔍 DIAGNOSTIC PWA:');
+                        console.log('  - Service Worker: ✅ Enregistré');
+                        console.log('  - HTTPS:', window.location.protocol === 'https:' ? '✅ Activé' : '⚠️ Désactivé (requis pour installation automatique)');
+                        console.log('  - Navigateur:', browserNames[browser], isPWACompatible ? '✅ Compatible PWA' : '⚠️ Installation manuelle uniquement');
+                        console.log('  - Mobile:', /Android|webOS|iPhone|iPad|iPod/i.test(navigator.userAgent) ? '✅ Oui' : '❌ Non');
+                        console.log('  - Standalone:', window.matchMedia('(display-mode: standalone)').matches ? '✅ Déjà installé' : '❌ Non installé');
+                        console.log('  - Support PWA: Chrome ✅ | Edge ✅ | Samsung ✅ | Opera ✅ | Firefox ⚠️ | Autres ⚠️');
+                        
+                        setInterval(() => {
+                            registration.update();
+                        }, 60 * 60 * 1000);
+                    })
+                    .catch((error) => {
+                        console.log('❌ Échec enregistrement Service Worker:', error);
+                    });
+
+                // Détection automatique des mises à jour
+                registration.addEventListener('updatefound', () => {
+                    const newWorker = registration.installing;
+                    console.log('🔄 Mise à jour détectée...');
+                    
+                    newWorker.addEventListener('statechange', () => {
+                        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                            // Notification de mise à jour disponible
+                            showUpdateNotification();
+                        }
+                    });
+                });
+
+                navigator.serviceWorker.addEventListener('controllerchange', () => {
+                    console.log('🔄 Nouveau Service Worker actif - Rechargement automatique');
+                    window.location.reload();
+                });
+            });
+        }
+
+        // Cacher le bouton si déjà installée
+        if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
+            console.log('📱 Application lancée en mode standalone');
+            installButton.style.display = 'none';
+        }
+    </script>
+    
+    <style>
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        @keyframes slideInRight {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        #installButton:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(15, 118, 110, 0.6);
+        }
+    </style>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

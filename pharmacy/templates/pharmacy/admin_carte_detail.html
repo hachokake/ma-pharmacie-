@@ -1,0 +1,276 @@
+{% extends 'pharmacy/base.html' %}
+{% load static %}
+
+{% block title %}Carte de {{ carte.utilisateur.get_full_name|default:carte.utilisateur.username }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .carte-preview {
+        background: linear-gradient(135deg, #2E7D32 0%, #1B5E20 100%);
+        border-radius: 20px;
+        padding: 30px;
+        color: white;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    }
+    .qr-code-container {
+        background: white;
+        padding: 15px;
+        border-radius: 10px;
+    }
+    .info-badge {
+        background: rgba(255,255,255,0.2);
+        padding: 8px 15px;
+        border-radius: 20px;
+        display: inline-block;
+        margin: 5px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- En-tête -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2><i class="fas fa-id-card text-success"></i> Détails de la Carte</h2>
+            <p class="text-muted">{{ carte.utilisateur.get_full_name|default:carte.utilisateur.username }}</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <div class="btn-group">
+                <a href="{% url 'pharmacy:admin_carte_imprimer' carte.id %}" class="btn btn-success" target="_blank">
+                    <i class="fas fa-print"></i> Imprimer
+                </a>
+                <a href="{% url 'pharmacy:admin_carte_modifier' carte.id %}" class="btn btn-warning">
+                    <i class="fas fa-edit"></i> Modifier
+                </a>
+            </div>
+            <a href="{% url 'pharmacy:admin_cartes_liste' %}" class="btn btn-outline-secondary ms-2">
+                <i class="fas fa-arrow-left"></i> Retour
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Aperçu de la carte -->
+        <div class="col-md-8 mb-4">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-credit-card"></i> Aperçu de la Carte</h5>
+                </div>
+                <div class="card-body p-4" style="background: #f8f9fa;">
+                    <!-- Recto -->
+                    <div class="carte-preview mb-4">
+                        <div class="row align-items-center">
+                            <div class="col-md-3 text-center">
+                                {% if carte.photo %}
+                                <img src="{{ carte.photo.url }}" alt="Photo" 
+                                     class="img-fluid rounded-circle border border-white border-4"
+                                     style="width: 120px; height: 120px; object-fit: cover;">
+                                {% else %}
+                                <div class="bg-white text-success rounded-circle d-inline-flex align-items-center justify-content-center"
+                                     style="width: 120px; height: 120px;">
+                                    <i class="fas fa-user fa-4x"></i>
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-9">
+                                <div class="mb-2">
+                                    <small class="text-white-50">PHARMACARE</small>
+                                </div>
+                                <h3 class="mb-1">{{ carte.utilisateur.get_full_name|default:carte.utilisateur.username|upper }}</h3>
+                                <h5 class="mb-3 text-white-50">{{ carte.get_poste_display }}</h5>
+                                
+                                <div class="mt-3">
+                                    <div class="info-badge">
+                                        <i class="fas fa-barcode"></i> {{ carte.matricule }}
+                                    </div>
+                                    <div class="info-badge">
+                                        <i class="fas fa-calendar"></i> Depuis {{ carte.date_embauche|date:"Y" }}
+                                    </div>
+                                </div>
+
+                                {% if carte.telephone %}
+                                <div class="mt-2">
+                                    <i class="fas fa-phone"></i> {{ carte.telephone }}
+                                </div>
+                                {% endif %}
+                                {% if carte.email_professionnel %}
+                                <div class="mt-1">
+                                    <i class="fas fa-envelope"></i> {{ carte.email_professionnel }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Verso avec QR Code -->
+                    <div class="card" style="background: linear-gradient(to right, #e8f5e9, #c8e6c9);">
+                        <div class="card-body text-center p-4">
+                            <h6 class="text-success mb-3">Code QR - Informations de Vérification</h6>
+                            {% if carte.qr_code %}
+                            <div class="qr-code-container d-inline-block">
+                                <img src="{{ carte.qr_code.url }}" alt="QR Code" style="width: 200px; height: 200px;">
+                            </div>
+                            {% else %}
+                            <div class="alert alert-warning">
+                                <i class="fas fa-exclamation-triangle"></i> QR Code non généré
+                            </div>
+                            {% endif %}
+                            <p class="mt-3 small text-muted">
+                                Scannez ce code pour vérifier l'identité de l'employé
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Informations détaillées -->
+        <div class="col-md-4">
+            <!-- Statut -->
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h6 class="card-title">Statut de la Carte</h6>
+                    {% if carte.actif %}
+                        {% if carte.est_expiree %}
+                        <span class="badge bg-danger fs-6">
+                            <i class="fas fa-times-circle"></i> Expirée
+                        </span>
+                        {% elif carte.jours_avant_expiration <= 30 %}
+                        <span class="badge bg-warning fs-6">
+                            <i class="fas fa-exclamation-triangle"></i> Expire bientôt
+                        </span>
+                        {% else %}
+                        <span class="badge bg-success fs-6">
+                            <i class="fas fa-check-circle"></i> Active
+                        </span>
+                        {% endif %}
+                    {% else %}
+                    <span class="badge bg-secondary fs-6">
+                        <i class="fas fa-ban"></i> Inactive
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Dates importantes -->
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h6 class="card-title">Dates Importantes</h6>
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-2">
+                            <i class="fas fa-calendar-check text-success"></i>
+                            <strong>Embauche:</strong><br>
+                            <small>{{ carte.date_embauche|date:"d/m/Y" }}</small>
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-calendar-plus text-primary"></i>
+                            <strong>Création carte:</strong><br>
+                            <small>{{ carte.date_creation_carte|date:"d/m/Y à H:i" }}</small>
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-calendar-times {% if carte.est_expiree %}text-danger{% else %}text-warning{% endif %}"></i>
+                            <strong>Expiration:</strong><br>
+                            <small>{{ carte.date_expiration_carte|date:"d/m/Y" }}</small>
+                            {% if carte.jours_avant_expiration > 0 %}
+                            <br><span class="badge bg-info">{{ carte.jours_avant_expiration }} jours restants</span>
+                            {% endif %}
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Informations de contact -->
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h6 class="card-title">Contact</h6>
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-2">
+                            <i class="fas fa-user text-primary"></i>
+                            <strong>Nom:</strong><br>
+                            <small>{{ carte.utilisateur.get_full_name|default:carte.utilisateur.username }}</small>
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-at text-info"></i>
+                            <strong>Username:</strong><br>
+                            <small>@{{ carte.utilisateur.username }}</small>
+                        </li>
+                        {% if carte.telephone %}
+                        <li class="mb-2">
+                            <i class="fas fa-phone text-success"></i>
+                            <strong>Téléphone:</strong><br>
+                            <small>{{ carte.telephone }}</small>
+                        </li>
+                        {% endif %}
+                        {% if carte.email_professionnel %}
+                        <li class="mb-2">
+                            <i class="fas fa-envelope text-danger"></i>
+                            <strong>Email:</strong><br>
+                            <small>{{ carte.email_professionnel }}</small>
+                        </li>
+                        {% endif %}
+                        {% if carte.adresse %}
+                        <li class="mb-2">
+                            <i class="fas fa-map-marker-alt text-warning"></i>
+                            <strong>Adresse:</strong><br>
+                            <small>{{ carte.adresse }}</small>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Notes -->
+            {% if carte.notes %}
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h6 class="card-title">Notes</h6>
+                    <p class="small mb-0">{{ carte.notes|linebreaks }}</p>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Actions -->
+            <div class="card border-success">
+                <div class="card-body">
+                    <h6 class="card-title">Actions Rapides</h6>
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'pharmacy:admin_carte_regenerer_qr' carte.id %}" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-sync"></i> Régénérer QR Code
+                        </a>
+                        <a href="{% url 'pharmacy:admin_user_detail' carte.utilisateur.id %}" class="btn btn-outline-info btn-sm">
+                            <i class="fas fa-user"></i> Profil Utilisateur
+                        </a>
+                        <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                            <i class="fas fa-trash"></i> Supprimer Carte
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de confirmation de suppression -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">Confirmer la Suppression</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Êtes-vous sûr de vouloir supprimer cette carte ?</p>
+                <p class="fw-bold">{{ carte.utilisateur.get_full_name|default:carte.utilisateur.username }} - {{ carte.matricule }}</p>
+                <p class="text-danger"><i class="fas fa-exclamation-triangle"></i> Cette action est irréversible.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <a href="{% url 'pharmacy:admin_carte_supprimer' carte.id %}" class="btn btn-danger">
+                    <i class="fas fa-trash"></i> Supprimer
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

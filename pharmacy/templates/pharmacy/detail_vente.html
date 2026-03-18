@@ -1,0 +1,90 @@
+{% extends 'pharmacy/base.html' %}
+
+{% block title %}Détail vente #{{ vente.id }} - Pharmacie{% endblock %}
+{% block page_title %}Détail de la vente #{{ vente.id }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Informations de la vente</h5>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <p><strong>Date:</strong> {{ vente.date_vente|date:"d/m/Y à H:i" }}</p>
+                        <p><strong>Client:</strong> {{ vente.client|default:"Client non renseigné" }}</p>
+                        <p><strong>Vendeur:</strong> {{ vente.vendeur.username|default:"N/A" }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Méthode de paiement:</strong> {{ vente.get_methode_paiement_display }}</p>
+                        <p><strong>Montant total:</strong> <span class="badge bg-success fs-5">{{ vente.montant_total }} FCFA</span></p>
+                    </div>
+                </div>
+
+                {% if vente.remarques %}
+                <div class="alert alert-info">
+                    <strong>Remarques:</strong> {{ vente.remarques }}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h5>Articles vendus</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Médicament</th>
+                                <th>Prix unitaire</th>
+                                <th>Quantité</th>
+                                <th>Sous-total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in items %}
+                            <tr>
+                                <td>{{ item.medicament.nom }}</td>
+                                <td>{{ item.prix_unitaire }} FCFA</td>
+                                <td>{{ item.quantite }}</td>
+                                <td><strong>{{ item.sous_total }} FCFA</strong></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot>
+                            <tr class="table-light">
+                                <td colspan="3" class="text-end"><strong>TOTAL:</strong></td>
+                                <td><strong class="fs-5">{{ vente.montant_total }} FCFA</strong></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5>Actions</h5>
+            </div>
+            <div class="card-body">
+                <a href="{% url 'pharmacy:liste_ventes' %}" class="btn btn-secondary w-100 mb-2">
+                    <i class="bi bi-arrow-left"></i> Retour à la liste
+                </a>
+                <button onclick="window.print()" class="btn btn-primary w-100 mb-2">
+                    <i class="bi bi-printer"></i> Imprimer
+                </button>
+                <a href="{% url 'pharmacy:supprimer_vente' vente.id %}" class="btn btn-danger w-100">
+                    <i class="bi bi-trash"></i> Supprimer la vente
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

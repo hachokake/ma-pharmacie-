@@ -1,0 +1,333 @@
+{% extends 'pharmacy/base.html' %}
+{% load static %}
+
+{% block title %}Ma Carte de Service - PharmaCare{% endblock %}
+
+{% block extra_css %}
+<style>
+    .carte-preview {
+        width: 100%;
+        max-width: 450px;
+        aspect-ratio: 85.6 / 53.98;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        overflow: hidden;
+        position: relative;
+    }
+    
+    .carte-recto {
+        background: linear-gradient(135deg, #2E7D32 0%, #1B5E20 100%);
+        color: white;
+        padding: 20px;
+        position: relative;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+    
+    .carte-logo {
+        font-size: 1.2rem;
+        font-weight: 700;
+        letter-spacing: 2px;
+        text-align: center;
+        margin-bottom: 10px;
+    }
+    
+    .carte-photo-container {
+        text-align: center;
+        margin-bottom: 10px;
+    }
+    
+    .carte-photo {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        border: 3px solid white;
+        object-fit: cover;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    }
+    
+    .carte-nom {
+        font-size: 1.1rem;
+        font-weight: 700;
+        text-align: center;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        margin-bottom: 5px;
+    }
+    
+    .carte-poste {
+        font-size: 0.8rem;
+        text-align: center;
+        opacity: 0.95;
+        margin-bottom: 10px;
+    }
+    
+    .carte-badges {
+        display: flex;
+        justify-content: space-around;
+        flex-wrap: wrap;
+        gap: 5px;
+    }
+    
+    .carte-badge {
+        background: rgba(255,255,255,0.25);
+        backdrop-filter: blur(10px);
+        padding: 4px 10px;
+        border-radius: 15px;
+        font-size: 0.7rem;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+    
+    .carte-verso {
+        background: linear-gradient(to bottom right, #e8f5e9, #c8e6c9);
+        padding: 20px;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+    }
+    
+    .qr-container {
+        background: white;
+        padding: 10px;
+        border-radius: 10px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+    
+    .qr-code-img {
+        width: 150px;
+        height: 150px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'pharmacy:dashboard' %}">Tableau de bord</a></li>
+                    <li class="breadcrumb-item active">Ma Carte de Service</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <!-- Aperçu Recto -->
+            <div class="card shadow mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-id-card"></i> Recto - Carte de Service</h5>
+                </div>
+                <div class="card-body d-flex justify-content-center align-items-center p-4">
+                    <div class="carte-preview">
+                        <div class="carte-recto">
+                            <div class="carte-logo">PHARMACARE</div>
+                            
+                            <div class="carte-photo-container">
+                                {% if carte.photo %}
+                                <img src="{{ carte.photo.url }}" alt="Photo" class="carte-photo">
+                                {% else %}
+                                <div class="carte-photo d-flex align-items-center justify-content-center" style="background: rgba(255,255,255,0.3);">
+                                    <i class="fas fa-user fa-2x"></i>
+                                </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="carte-nom">{{ carte.utilisateur.get_full_name|default:carte.utilisateur.username }}</div>
+                            <div class="carte-poste">{{ carte.get_poste_display }}</div>
+                            
+                            <div class="carte-badges">
+                                <div class="carte-badge">
+                                    <i class="fas fa-barcode"></i>
+                                    <span>{{ carte.matricule }}</span>
+                                </div>
+                                {% if carte.date_embauche %}
+                                <div class="carte-badge">
+                                    <i class="fas fa-calendar"></i>
+                                    <span>{{ carte.date_embauche.year }}</span>
+                                </div>
+                                {% endif %}
+                                {% if carte.telephone %}
+                                <div class="carte-badge">
+                                    <i class="fas fa-phone"></i>
+                                    <span>{{ carte.telephone }}</span>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Aperçu Verso -->
+            <div class="card shadow mb-4">
+                <div class="card-header" style="background: #2E7D32; color: white;">
+                    <h5 class="mb-0"><i class="fas fa-qrcode"></i> Verso - Code QR de Vérification</h5>
+                </div>
+                <div class="card-body d-flex justify-content-center align-items-center p-4">
+                    <div class="carte-preview">
+                        <div class="carte-verso">
+                            <h6 style="color: #2E7D32; font-weight: 700; margin-bottom: 15px;">
+                                ━ Code de Vérification ━
+                            </h6>
+                            
+                            <div class="qr-container">
+                                {% if carte.qr_code %}
+                                <img src="{{ carte.qr_code.url }}" alt="QR Code" class="qr-code-img">
+                                {% else %}
+                                <div class="alert alert-warning mb-0">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                    QR code non disponible
+                                </div>
+                                {% endif %}
+                            </div>
+                            
+                            <p class="small text-center mt-3 mb-0" style="color: #1B5E20;">
+                                Scannable par l'administrateur<br>
+                                pour vérification d'identité
+                            </p>
+                            
+                            <div style="position: absolute; bottom: 10px; width: 90%; text-align: center;">
+                                <p class="small mb-0" style="color: #2E7D32; font-size: 0.65rem;">
+                                    📧 {{ carte.email_professionnel|default:carte.utilisateur.email }}<br>
+                                    📞 {{ carte.telephone|default:"N/A" }}<br>
+                                    ⏰ Valide jusqu'au {{ carte.date_expiration_carte|date:"d/m/Y" }}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Panneau d'informations -->
+        <div class="col-md-4">
+            <!-- Statut -->
+            <div class="card shadow mb-3">
+                <div class="card-header bg-light">
+                    <h6 class="mb-0"><i class="fas fa-info-circle"></i> Statut de la Carte</h6>
+                </div>
+                <div class="card-body text-center">
+                    {% if carte.est_expiree %}
+                    <span class="badge bg-danger" style="font-size: 1.2rem; padding: 10px 20px;">
+                        <i class="fas fa-times-circle"></i> Expirée
+                    </span>
+                    {% elif carte.jours_avant_expiration <= 30 %}
+                    <span class="badge bg-warning" style="font-size: 1.2rem; padding: 10px 20px;">
+                        <i class="fas fa-exclamation-triangle"></i> Expire Bientôt
+                    </span>
+                    {% elif carte.actif %}
+                    <span class="badge bg-success" style="font-size: 1.2rem; padding: 10px 20px;">
+                        <i class="fas fa-check-circle"></i> Active
+                    </span>
+                    {% else %}
+                    <span class="badge bg-secondary" style="font-size: 1.2rem; padding: 10px 20px;">
+                        <i class="fas fa-ban"></i> Inactive
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Dates importantes -->
+            <div class="card shadow mb-3">
+                <div class="card-header bg-light">
+                    <h6 class="mb-0"><i class="fas fa-calendar"></i> Dates Importantes</h6>
+                </div>
+                <div class="card-body">
+                    <p class="mb-2">
+                        <strong>Date d'embauche:</strong><br>
+                        <i class="fas fa-calendar-check text-success"></i> 
+                        {{ carte.date_embauche|date:"d/m/Y"|default:"N/A" }}
+                    </p>
+                    <p class="mb-2">
+                        <strong>Carte créée le:</strong><br>
+                        <i class="fas fa-calendar-plus text-info"></i> 
+                        {{ carte.date_creation_carte|date:"d/m/Y H:i" }}
+                    </p>
+                    <p class="mb-2">
+                        <strong>Date d'expiration:</strong><br>
+                        <i class="fas fa-calendar-times text-warning"></i> 
+                        {{ carte.date_expiration_carte|date:"d/m/Y" }}
+                    </p>
+                    {% if not carte.est_expiree %}
+                    <div class="alert alert-info mt-3 mb-0">
+                        <i class="fas fa-clock"></i>
+                        <strong>{{ carte.jours_avant_expiration }} jour(s)</strong> restant(s)
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Informations de contact -->
+            <div class="card shadow mb-3">
+                <div class="card-header bg-light">
+                    <h6 class="mb-0"><i class="fas fa-address-card"></i> Contact</h6>
+                </div>
+                <div class="card-body">
+                    <p class="mb-2">
+                        <i class="fas fa-user text-primary"></i>
+                        <strong>Nom:</strong><br>
+                        {{ carte.utilisateur.get_full_name|default:carte.utilisateur.username }}
+                    </p>
+                    <p class="mb-2">
+                        <i class="fas fa-briefcase text-success"></i>
+                        <strong>Poste:</strong><br>
+                        {{ carte.get_poste_display }}
+                    </p>
+                    <p class="mb-2">
+                        <i class="fas fa-phone text-info"></i>
+                        <strong>Téléphone:</strong><br>
+                        {{ carte.telephone|default:"Non renseigné" }}
+                    </p>
+                    <p class="mb-2">
+                        <i class="fas fa-envelope text-warning"></i>
+                        <strong>Email:</strong><br>
+                        {{ carte.email_professionnel|default:carte.utilisateur.email }}
+                    </p>
+                    {% if carte.adresse %}
+                    <p class="mb-0">
+                        <i class="fas fa-map-marker-alt text-danger"></i>
+                        <strong>Adresse:</strong><br>
+                        {{ carte.adresse }}
+                    </p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="card shadow">
+                <div class="card-header bg-light">
+                    <h6 class="mb-0"><i class="fas fa-cog"></i> Actions</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'pharmacy:ma_carte_imprimer' %}" class="btn btn-success" target="_blank">
+                            <i class="fas fa-print"></i> Imprimer la Carte
+                        </a>
+                        <a href="{% url 'pharmacy:dashboard' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left"></i> Retour au Tableau de bord
+                        </a>
+                    </div>
+
+                    {% if carte.est_expiree or carte.jours_avant_expiration <= 30 %}
+                    <div class="alert alert-warning mt-3 mb-0">
+                        <i class="fas fa-info-circle"></i>
+                        Contactez l'administrateur pour renouveler votre carte.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

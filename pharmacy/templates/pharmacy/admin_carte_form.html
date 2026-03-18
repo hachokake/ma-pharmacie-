@@ -1,0 +1,353 @@
+{% extends 'pharmacy/base.html' %}
+{% load static %}
+
+{% block title %}{% if carte %}Modifier{% else %}Créer{% endif %} Carte - Administration{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-id-card"></i>
+                        {% if carte %}Modifier la Carte{% else %}Créer une Nouvelle Carte{% endif %}
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+
+                        {% if not carte %}
+                        <!-- Sélection de l'employé (création uniquement) -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">
+                                <i class="fas fa-user"></i> Employé *
+                            </label>
+                            <select name="utilisateur" class="form-select" required>
+                                <option value="">Sélectionnez un employé</option>
+                                {% for user in users_sans_carte %}
+                                <option value="{{ user.id }}">
+                                    {{ user.get_full_name|default:user.username }} (@{{ user.username }})
+                                </option>
+                                {% endfor %}
+                            </select>
+                            {% if not users_sans_carte %}
+                            <div class="alert alert-warning mt-2">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                Tous les utilisateurs ont déjà une carte.
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% else %}
+                        <div class="alert alert-info">
+                            <strong>Employé:</strong> {{ carte.utilisateur.get_full_name|default:carte.utilisateur.username }}
+                        </div>
+                        {% endif %}
+
+                        <!-- Poste -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">
+                                <i class="fas fa-briefcase"></i> Poste/Fonction *
+                            </label>
+                            <select name="poste" class="form-select" required>
+                                {% for value, label in postes_choices %}
+                                <option value="{{ value }}" {% if carte and carte.poste == value %}selected{% endif %}>
+                                    {{ label }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="row">
+                            <!-- Matricule -->
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">
+                                    <i class="fas fa-barcode"></i> Matricule
+                                </label>
+                                <input type="text" name="matricule" class="form-control" 
+                                       value="{{ carte.matricule|default:'' }}"
+                                       placeholder="Auto-généré si vide">
+                                <small class="text-muted">Laissez vide pour génération automatique</small>
+                            </div>
+
+                            <!-- Téléphone -->
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">
+                                    <i class="fas fa-phone"></i> Téléphone
+                                </label>
+                                <input type="tel" name="telephone" class="form-control" 
+                                       value="{{ carte.telephone|default:'' }}"
+                                       placeholder="+243 XXX XXX XXX">
+                            </div>
+                        </div>
+
+                        <!-- Email professionnel -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">
+                                <i class="fas fa-envelope"></i> Email Professionnel
+                            </label>
+                            <input type="email" name="email_professionnel" class="form-control" 
+                                   value="{{ carte.email_professionnel|default:'' }}"
+                                   placeholder="employe@pharmacare.com">
+                        </div>
+
+                        <!-- Adresse -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">
+                                <i class="fas fa-map-marker-alt"></i> Adresse
+                            </label>
+                            <textarea name="adresse" class="form-control" rows="2" 
+                                      placeholder="Adresse complète">{{ carte.adresse|default:'' }}</textarea>
+                        </div>
+
+                        <div class="row">
+                            <!-- Date d'embauche -->
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">
+                                    <i class="fas fa-calendar-check"></i> Date d'Embauche
+                                </label>
+                                <input type="date" name="date_embauche" class="form-control" 
+                                       value="{{ carte.date_embauche|date:'Y-m-d'|default:'' }}">
+                            </div>
+
+                            <!-- Date d'expiration -->
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">
+                                    <i class="fas fa-calendar-times"></i> Date d'Expiration
+                                </label>
+                                <input type="date" name="date_expiration_carte" class="form-control" 
+                                       value="{{ carte.date_expiration_carte|date:'Y-m-d'|default:'' }}">
+                                <small class="text-muted">1 an par défaut</small>
+                            </div>
+                        </div>
+
+                        <!-- Photo -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">
+                                <i class="fas fa-camera"></i> Photo Professionnelle
+                            </label>
+                            {% if carte and carte.photo %}
+                            <div class="mb-2">
+                                <img src="{{ carte.photo.url }}" alt="Photo actuelle" class="img-thumbnail" style="max-width: 150px;">
+                                <p class="text-muted small">Photo actuelle</p>
+                            </div>
+                            {% endif %}
+                            
+                            <!-- Aperçu photo capturée -->
+                            <div id="photoPreview" class="mb-2" style="display: none;">
+                                <img id="capturedPhoto" src="" alt="Photo capturée" class="img-thumbnail" style="max-width: 200px;">
+                                <button type="button" class="btn btn-sm btn-danger ms-2" onclick="clearCapturedPhoto()">
+                                    <i class="fas fa-trash"></i> Supprimer
+                                </button>
+                            </div>
+
+                            <!-- Boutons d'action -->
+                            <div class="btn-group mb-2" role="group">
+                                <button type="button" class="btn btn-outline-primary" onclick="document.getElementById('photoFileInput').click()">
+                                    <i class="fas fa-upload"></i> Choisir un fichier
+                                </button>
+                                <button type="button" class="btn btn-outline-success" onclick="openCamera()">
+                                    <i class="fas fa-camera"></i> Prendre une photo
+                                </button>
+                            </div>
+
+                            <input type="file" id="photoFileInput" name="photo" class="form-control d-none" accept="image/*">
+                            <small class="text-muted d-block">Format: JPG, PNG (recommandé: photo de face, fond uni)</small>
+
+                            <!-- Modal Caméra -->
+                            <div class="modal fade" id="cameraModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+                                <div class="modal-dialog modal-lg">
+                                    <div class="modal-content">
+                                        <div class="modal-header bg-success text-white">
+                                            <h5 class="modal-title">
+                                                <i class="fas fa-camera"></i> Prendre une Photo
+                                            </h5>
+                                            <button type="button" class="btn-close btn-close-white" onclick="stopCamera()"></button>
+                                        </div>
+                                        <div class="modal-body text-center">
+                                            <video id="cameraStream" autoplay playsinline style="max-width: 100%; border-radius: 10px;"></video>
+                                            <canvas id="photoCanvas" style="display: none;"></canvas>
+                                            <div id="cameraError" class="alert alert-danger mt-3" style="display: none;"></div>
+                                            <div class="alert alert-info mt-3">
+                                                <i class="fas fa-keyboard"></i> <strong>Astuce :</strong> Appuyez sur <kbd>Entrée</kbd> pour capturer rapidement
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" onclick="stopCamera()">
+                                                <i class="fas fa-times"></i> Annuler
+                                            </button>
+                                            <button type="button" class="btn btn-success" onclick="capturePhoto()">
+                                                <i class="fas fa-camera"></i> Capturer
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+<script>
+let stream = null;
+let capturedFile = null;
+let cameraModalInstance = null;
+
+function openCamera() {
+    const modalElement = document.getElementById('cameraModal');
+    cameraModalInstance = new bootstrap.Modal(modalElement, {
+        backdrop: 'static',
+        keyboard: false
+    });
+    cameraModalInstance.show();
+
+    const video = document.getElementById('cameraStream');
+    const errorDiv = document.getElementById('cameraError');
+    
+    errorDiv.style.display = 'none';
+    
+    navigator.mediaDevices.getUserMedia({ 
+        video: { 
+            facingMode: 'user',
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+        } 
+    })
+    .then(function(mediaStream) {
+        stream = mediaStream;
+        video.srcObject = mediaStream;
+        video.play();
+        
+        // Ajouter l'événement clavier pour la touche Enter
+        document.addEventListener('keypress', handleKeyPress);
+    })
+    .catch(function(err) {
+        console.error('Erreur caméra:', err);
+        errorDiv.textContent = '❌ Impossible d\'accéder à la caméra. Vérifiez les permissions.';
+        errorDiv.style.display = 'block';
+    });
+}
+
+function handleKeyPress(event) {
+    // Si la touche Enter est pressée et que la caméra est ouverte
+    if (event.key === 'Enter' && stream !== null) {
+        event.preventDefault();
+        capturePhoto();
+    }
+}
+
+function stopCamera() {
+    // Retirer l'événement clavier
+    document.removeEventListener('keypress', handleKeyPress);
+    
+    if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+        stream = null;
+    }
+    
+    if (cameraModalInstance) {
+        cameraModalInstance.hide();
+        cameraModalInstance = null;
+    }
+}
+
+function capturePhoto() {
+    const video = document.getElementById('cameraStream');
+    const canvas = document.getElementById('photoCanvas');
+    const context = canvas.getContext('2d');
+    
+    // Vérifier que la vidéo est prête
+    if (video.videoWidth === 0 || video.videoHeight === 0) {
+        alert('⏳ Veuillez patienter, la caméra est en cours de chargement...');
+        return;
+    }
+    
+    // Définir dimensions du canvas
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    
+    // Dessiner l'image du flux vidéo sur le canvas
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+    
+    // Convertir en blob puis en File
+    canvas.toBlob(function(blob) {
+        // Créer un objet File
+        capturedFile = new File([blob], 'photo_employe_' + Date.now() + '.jpg', { 
+            type: 'image/jpeg' 
+        });
+        
+        // Afficher l'aperçu
+        const preview = document.getElementById('photoPreview');
+        const previewImg = document.getElementById('capturedPhoto');
+        previewImg.src = canvas.toDataURL('image/jpeg');
+        preview.style.display = 'block';
+        
+        // Créer un DataTransfer pour assigner le fichier à l'input
+        const dataTransfer = new DataTransfer();
+        dataTransfer.items.add(capturedFile);
+        document.getElementById('photoFileInput').files = dataTransfer.files;
+        
+        // Fermer la caméra
+        stopCamera();
+        
+        // Message de succès
+        alert('✅ Photo capturée avec succès !');
+    }, 'image/jpeg', 0.9);
+}
+
+function clearCapturedPhoto() {
+    document.getElementById('photoPreview').style.display = 'none';
+    document.getElementById('capturedPhoto').src = '';
+    document.getElementById('photoFileInput').value = '';
+    capturedFile = null;
+}
+</script>
+
+                        {% if carte %}
+                        <!-- Statut (modification uniquement) -->
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <input type="checkbox" name="actif" class="form-check-input" 
+                                       id="actif" {% if carte.actif %}checked{% endif %}>
+                                <label class="form-check-label" for="actif">
+                                    <i class="fas fa-toggle-on"></i> Carte Active
+                                </label>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- Notes -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">
+                                <i class="fas fa-sticky-note"></i> Notes/Remarques
+                            </label>
+                            <textarea name="notes" class="form-control" rows="3" 
+                                      placeholder="Informations complémentaires...">{{ carte.notes|default:'' }}</textarea>
+                        </div>
+
+                        <hr>
+
+                        <!-- Boutons -->
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{% if carte %}{% url 'pharmacy:admin_carte_detail' carte.id %}{% else %}{% url 'pharmacy:admin_cartes_liste' %}{% endif %}" 
+                               class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Annuler
+                            </a>
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-save"></i> 
+                                {% if carte %}Enregistrer les Modifications{% else %}Créer la Carte{% endif %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            {% if not users_sans_carte and not carte %}
+            <div class="text-center mt-4">
+                <a href="{% url 'pharmacy:admin_cartes_liste' %}" class="btn btn-outline-primary">
+                    <i class="fas fa-arrow-left"></i> Retour à la Liste
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

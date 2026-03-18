@@ -1,0 +1,78 @@
+{% extends 'pharmacy/base.html' %}
+
+{% block title %}Alertes Stock - Pharmacie{% endblock %}
+{% block page_title %}Alertes de stock{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header bg-danger text-white">
+                <h5><i class="bi bi-exclamation-circle"></i> Médicaments en rupture de stock</h5>
+            </div>
+            <div class="card-body">
+                {% if medicaments_rupture %}
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Nom</th>
+                                <th>Catégorie</th>
+                                <th>Stock</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for med in medicaments_rupture %}
+                            <tr>
+                                <td>{{ med.nom }}</td>
+                                <td>{{ med.categorie.nom|default:"N/A" }}</td>
+                                <td><span class="badge bg-danger">{{ med.quantite_stock }}</span></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted">Aucun médicament en rupture de stock</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header bg-warning text-white">
+                <h5><i class="bi bi-exclamation-triangle"></i> Médicaments avec stock faible</h5>
+            </div>
+            <div class="card-body">
+                {% if medicaments_alerte %}
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Nom</th>
+                                <th>Catégorie</th>
+                                <th>Stock actuel</th>
+                                <th>Seuil d'alerte</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for med in medicaments_alerte %}
+                            <tr>
+                                <td>{{ med.nom }}</td>
+                                <td>{{ med.categorie.nom|default:"N/A" }}</td>
+                                <td><span class="badge bg-warning">{{ med.quantite_stock }}</span></td>
+                                <td>{{ med.seuil_alerte }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted">Aucun médicament avec stock faible</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

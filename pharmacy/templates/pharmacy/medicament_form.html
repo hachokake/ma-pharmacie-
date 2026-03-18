@@ -1,0 +1,623 @@
+{% extends 'pharmacy/base.html' %}
+
+{% block title %}{{ titre }} - Pharmacie{% endblock %}
+{% block page_title %}{{ titre }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="card fade-in-up shadow-lg">
+            <div class="card-header bg-green-primary text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-capsule"></i> {{ titre }}
+                </h5>
+            </div>
+            <div class="card-body p-4">
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+
+                <!-- Bouton Scanner -->
+                <div class="text-center mb-4">
+                    <button type="button" class="btn btn-primary btn-lg" id="scannerBtn" data-bs-toggle="modal" data-bs-target="#scannerModal">
+                        <i class="bi bi-upc-scan"></i> Scanner un code-barres / QR
+                    </button>
+                    <p class="text-muted mt-2 mb-0"><small>Scannez rapidement un médicament existant ou nouveau</small></p>
+                </div>
+
+                <form method="post" class="needs-validation" novalidate>
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        <!-- Informations de base -->
+                        <div class="col-md-6 mb-4">
+                            <div class="card h-100">
+                                <div class="card-header bg-light">
+                                    <h6 class="mb-0"><i class="bi bi-info-circle"></i> Informations de base</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <label for="{{ form.nom.id_for_label }}" class="form-label fw-bold">
+                                            {{ form.nom.label }} <span class="text-danger">*</span>
+                                        </label>
+                                        {{ form.nom }}
+                                        {% if form.nom.errors %}
+                                            <div class="text-danger small">{{ form.nom.errors }}</div>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="{{ form.categorie.id_for_label }}" class="form-label fw-bold">
+                                            {{ form.categorie.label }} <span class="text-danger">*</span>
+                                        </label>
+                                        <div class="input-group">
+                                            {{ form.categorie }}
+                                            <a href="{% url 'pharmacy:ajouter_categorie' %}" class="btn btn-outline-success" title="Ajouter une catégorie">
+                                                <i class="bi bi-plus-lg"></i>
+                                            </a>
+                                        </div>
+                                        {% if form.categorie.errors %}
+                                            <div class="text-danger small">{{ form.categorie.errors }}</div>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="{{ form.description.id_for_label }}" class="form-label fw-bold">
+                                            {{ form.description.label }}
+                                        </label>
+                                        {{ form.description }}
+                                        {% if form.description.errors %}
+                                            <div class="text-danger small">{{ form.description.errors }}</div>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="{{ form.fabricant.id_for_label }}" class="form-label fw-bold">
+                                            {{ form.fabricant.label }}
+                                        </label>
+                                        {{ form.fabricant }}
+                                        {% if form.fabricant.errors %}
+                                            <div class="text-danger small">{{ form.fabricant.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Prix et Stock -->
+                        <div class="col-md-6 mb-4">
+                            <div class="card h-100">
+                                <div class="card-header bg-light">
+                                    <h6 class="mb-0"><i class="bi bi-cash-stack"></i> Prix et Stock</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <label for="{{ form.prix_unitaire.id_for_label }}" class="form-label fw-bold">
+                                            {{ form.prix_unitaire.label }} <span class="text-danger">*</span>
+                                        </label>
+                                        <div class="input-group">
+                                            {{ form.prix_unitaire }}
+                                            <span class="input-group-text">FCFA</span>
+                                        </div>
+                                        {% if form.prix_unitaire.errors %}
+                                            <div class="text-danger small">{{ form.prix_unitaire.errors }}</div>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="{{ form.quantite_stock.id_for_label }}" class="form-label fw-bold">
+                                            {{ form.quantite_stock.label }} <span class="text-danger">*</span>
+                                        </label>
+                                        {{ form.quantite_stock }}
+                                        {% if form.quantite_stock.errors %}
+                                            <div class="text-danger small">{{ form.quantite_stock.errors }}</div>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="{{ form.seuil_alerte.id_for_label }}" class="form-label fw-bold">
+                                            {{ form.seuil_alerte.label }} <span class="text-danger">*</span>
+                                        </label>
+                                        {{ form.seuil_alerte }}
+                                        <small class="form-text text-muted">
+                                            Alerte déclenchée si stock ≤ ce seuil
+                                        </small>
+                                        {% if form.seuil_alerte.errors %}
+                                            <div class="text-danger small">{{ form.seuil_alerte.errors }}</div>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="{{ form.date_expiration.id_for_label }}" class="form-label fw-bold">
+                                            {{ form.date_expiration.label }} <span class="text-danger">*</span>
+                                        </label>
+                                        {{ form.date_expiration }}
+                                        {% if form.date_expiration.errors %}
+                                            <div class="text-danger small">{{ form.date_expiration.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Informations complémentaires -->
+                        <div class="col-12 mb-4">
+                            <div class="card">
+                                <div class="card-header bg-light">
+                                    <h6 class="mb-0"><i class="bi bi-file-text"></i> Informations complémentaires</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label for="{{ form.numero_lot.id_for_label }}" class="form-label fw-bold">
+                                                {{ form.numero_lot.label }}
+                                            </label>
+                                            {{ form.numero_lot }}
+                                            {% if form.numero_lot.errors %}
+                                                <div class="text-danger small">{{ form.numero_lot.errors }}</div>
+                                            {% endif %}
+                                        </div>
+
+                                        <div class="col-md-6 mb-3">
+                                            <label for="{{ form.code_barre.id_for_label }}" class="form-label fw-bold">
+                                                {{ form.code_barre.label }}
+                                            </label>
+                                            {{ form.code_barre }}
+                                            {% if form.code_barre.errors %}
+                                                <div class="text-danger small">{{ form.code_barre.errors }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Boutons d'action -->
+                    <div class="d-flex justify-content-between align-items-center mt-4">
+                        <a href="{% url 'pharmacy:liste_medicaments' %}" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i> Retour à la liste
+                        </a>
+                        <button type="submit" class="btn btn-success btn-lg px-5">
+                            <i class="bi bi-check-circle"></i> {{ action }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Scanner -->
+<div class="modal fade" id="scannerModal" tabindex="-1" aria-labelledby="scannerModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="scannerModalLabel">
+                    <i class="bi bi-camera"></i> Scanner Code-Barres / QR
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Message d'information -->
+                <div class="alert alert-info alert-dismissible fade show" role="alert">
+                    <i class="bi bi-info-circle"></i> 
+                    <strong>Astuce :</strong> Pointez la caméra vers le code-barres ou QR code. 
+                    Si la caméra ne s'active pas, autorisez l'accès dans les paramètres de votre navigateur.
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                
+                <div id="scannerContainer">
+                    <div id="reader" style="width: 100%; max-width: 600px; margin: 0 auto;"></div>
+                </div>
+                <div id="scanResult" class="mt-3" style="display: none;">
+                    <div class="alert alert-info">
+                        <i class="bi bi-check-circle"></i> Code scanné: <strong id="scannedCode"></strong>
+                    </div>
+                </div>
+                <div id="medicamentExistant" style="display: none;">
+                    <div class="alert alert-warning">
+                        <h5><i class="bi bi-exclamation-triangle"></i> Ce médicament existe déjà !</h5>
+                        <p><strong>Nom:</strong> <span id="existingName"></span></p>
+                        <p><strong>Stock actuel:</strong> <span id="existingStock"></span> unités</p>
+                        <p><strong>Prix:</strong> <span id="existingPrice"></span> FCFA</p>
+                    </div>
+                    <div class="d-grid gap-2">
+                        <button type="button" class="btn btn-success btn-lg" onclick="ajouterStock()">
+                            <i class="bi bi-plus-circle"></i> Ajouter au stock
+                        </button>
+                        <button type="button" class="btn btn-danger btn-lg" onclick="retirerStock()">
+                            <i class="bi bi-dash-circle"></i> Retirer du stock
+                        </button>
+                        <button type="button" class="btn btn-secondary" onclick="resetScanner()">
+                            <i class="bi bi-arrow-counterclockwise"></i> Scanner un autre code
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Ajuster Stock -->
+<div class="modal fade" id="ajusterStockModal" tabindex="-1" aria-labelledby="ajusterStockModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="ajusterStockModalLabel">
+                    <i class="bi bi-boxes"></i> <span id="actionTitle">Ajuster le stock</span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="ajusterStockForm">
+                    <input type="hidden" id="medicamentId" name="medicament_id">
+                    <input type="hidden" id="actionType" name="action_type">
+                    <div class="mb-3">
+                        <label for="quantiteAjustement" class="form-label fw-bold">Quantité</label>
+                        <input type="number" class="form-control form-control-lg" id="quantiteAjustement" name="quantite" min="1" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="motifAjustement" class="form-label fw-bold">Motif (optionnel)</label>
+                        <textarea class="form-control" id="motifAjustement" name="motif" rows="3" placeholder="Raison de l'ajustement..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-primary" onclick="confirmerAjustement()">
+                    <i class="bi bi-check-circle"></i> Confirmer
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card {
+        border: none;
+        transition: transform 0.3s;
+    }
+    
+    .card:hover {
+        transform: translateY(-2px);
+    }
+    
+    .form-control:focus, .form-select:focus {
+        border-color: #14b8a6;
+        box-shadow: 0 0 0 0.2rem rgba(20, 184, 166, 0.25);
+    }
+</style>
+
+<!-- Bibliothèque html5-qrcode pour scanner -->
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+
+<script>
+    // Validation Bootstrap
+    (function () {
+        'use strict'
+        var forms = document.querySelectorAll('.needs-validation')
+        Array.prototype.slice.call(forms).forEach(function (form) {
+            form.addEventListener('submit', function (event) {
+                if (!form.checkValidity()) {
+                    event.preventDefault()
+                    event.stopPropagation()
+                }
+                form.classList.add('was-validated')
+            }, false)
+        })
+    })()
+
+    // Variables globales pour le scanner
+    let html5QrcodeScanner = null;
+    let currentScannedCode = null;
+    let currentMedicamentId = null;
+
+    // Initialiser le scanner quand le modal s'ouvre
+    document.getElementById('scannerModal').addEventListener('shown.bs.modal', function () {
+        startScanner();
+    });
+
+    // Arrêter le scanner quand le modal se ferme
+    document.getElementById('scannerModal').addEventListener('hidden.bs.modal', function () {
+        stopScanner();
+    });
+
+    function startScanner() {
+        if (html5QrcodeScanner) {
+            return; // Déjà en cours
+        }
+
+        // Vérifier si HTTPS (requis sur mobile)
+        const isHttps = window.location.protocol === 'https:';
+        const isMobile = /Android|webOS|iPhone|iPad|iPod/i.test(navigator.userAgent);
+        
+        if (!isHttps && isMobile) {
+            showCameraErrorMessage(
+                'HTTPS requis',
+                'Pour des raisons de sécurité, l\'accès à la caméra nécessite HTTPS sur mobile. Utilisez plutôt la saisie manuelle du code-barres ci-dessous.',
+                true
+            );
+            return;
+        }
+
+        html5QrcodeScanner = new Html5Qrcode("reader");
+        
+        const config = {
+            fps: 10,
+            qrbox: { width: 250, height: 250 },
+            aspectRatio: 1.0,
+            disableFlip: false
+        };
+
+        // Essayer d'abord avec la caméra arrière
+        html5QrcodeScanner.start(
+            { facingMode: "environment" },
+            config,
+            onScanSuccess,
+            onScanError
+        ).catch(err => {
+            console.error('Erreur caméra arrière:', err);
+            
+            // Essayer avec la caméra frontale
+            html5QrcodeScanner.start(
+                { facingMode: "user" },
+                config,
+                onScanSuccess,
+                onScanError
+            ).catch(err2 => {
+                console.error('Erreur caméra frontale:', err2);
+                
+                // Essayer sans spécifier la caméra
+                html5QrcodeScanner.start(
+                    { video: true },
+                    config,
+                    onScanSuccess,
+                    onScanError
+                ).catch(err3 => {
+                    console.error('Erreur accès caméra:', err3);
+                    showCameraErrorMessage(
+                        'Impossible d\'accéder à la caméra',
+                        err3.message || 'Veuillez vérifier les permissions de caméra dans les paramètres de votre navigateur/appareil.',
+                        false
+                    );
+                });
+            });
+        });
+    }
+
+    function showCameraErrorMessage(title, message, showManualInput) {
+        document.getElementById('reader').style.display = 'none';
+        
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'alert alert-warning';
+        errorDiv.innerHTML = `
+            <h5><i class="bi bi-exclamation-triangle"></i> ${title}</h5>
+            <p>${message}</p>
+            ${showManualInput ? `
+                <hr>
+                <p><strong>Solution alternative :</strong></p>
+                <div class="input-group mb-3">
+                    <input type="text" class="form-control" id="manualCodeInput" placeholder="Entrez le code-barres manuellement">
+                    <button class="btn btn-primary" onclick="verifierCodeManuel()">
+                        <i class="bi bi-search"></i> Vérifier
+                    </button>
+                </div>
+            ` : `
+                <hr>
+                <p><strong>Solutions possibles :</strong></p>
+                <ul>
+                    <li>Autorisez l'accès à la caméra dans les paramètres du navigateur</li>
+                    <li>Vérifiez que vous utilisez HTTPS (pas HTTP)</li>
+                    <li>Redémarrez votre navigateur et réessayez</li>
+                    <li>Utilisez Chrome ou Edge pour une meilleure compatibilité</li>
+                </ul>
+                <button class="btn btn-secondary" onclick="fermerScanner()">
+                    <i class="bi bi-x-circle"></i> Fermer et saisir manuellement
+                </button>
+            `}
+        `;
+        
+        document.getElementById('scannerContainer').appendChild(errorDiv);
+    }
+
+    function verifierCodeManuel() {
+        const code = document.getElementById('manualCodeInput').value.trim();
+        if (code) {
+            currentScannedCode = code;
+            document.getElementById('scannedCode').textContent = code;
+            document.getElementById('scanResult').style.display = 'block';
+            verifierMedicament(code);
+        } else {
+            alert('Veuillez entrer un code-barres');
+        }
+    }
+
+    function fermerScanner() {
+        bootstrap.Modal.getInstance(document.getElementById('scannerModal')).hide();
+    }
+
+    function stopScanner() {
+        if (html5QrcodeScanner) {
+            html5QrcodeScanner.stop().then(() => {
+                html5QrcodeScanner.clear();
+                html5QrcodeScanner = null;
+            }).catch(err => {
+                console.error('Erreur arrêt scanner:', err);
+            });
+        }
+    }
+
+    function onScanSuccess(decodedText, decodedResult) {
+        console.log('Code scanné:', decodedText);
+        currentScannedCode = decodedText;
+        
+        // Arrêter le scanner
+        stopScanner();
+        
+        // Afficher le code scanné
+        document.getElementById('scannedCode').textContent = decodedText;
+        document.getElementById('scanResult').style.display = 'block';
+        document.getElementById('reader').style.display = 'none';
+        
+        // Vérifier si le médicament existe
+        verifierMedicament(decodedText);
+    }
+
+    function onScanError(errorMessage) {
+        // Ignorer les erreurs de scan continues
+    }
+
+    function verifierMedicament(code) {
+        // Appel AJAX pour vérifier si le médicament existe
+        fetch(`/medicaments/verifier-code/?code=${encodeURIComponent(code)}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.existe) {
+                    // Médicament existe déjà
+                    afficherMedicamentExistant(data.medicament);
+                } else {
+                    // Nouveau médicament - pré-remplir le formulaire
+                    preremplirFormulaire(code);
+                }
+            })
+            .catch(error => {
+                console.error('Erreur vérification:', error);
+                alert('Erreur lors de la vérification du code.');
+            });
+    }
+
+    function afficherMedicamentExistant(medicament) {
+        currentMedicamentId = medicament.id;
+        document.getElementById('existingName').textContent = medicament.nom;
+        document.getElementById('existingStock').textContent = medicament.quantite_stock;
+        document.getElementById('existingPrice').textContent = medicament.prix_unitaire;
+        document.getElementById('medicamentExistant').style.display = 'block';
+    }
+
+    function preremplirFormulaire(code) {
+        // Fermer le modal
+        bootstrap.Modal.getInstance(document.getElementById('scannerModal')).hide();
+        
+        // Pré-remplir le champ code-barres
+        const codeBarre = document.querySelector('input[name="code_barre"]');
+        if (codeBarre) {
+            codeBarre.value = code;
+            codeBarre.focus();
+        }
+        
+        // Message de confirmation
+        const alertDiv = document.createElement('div');
+        alertDiv.className = 'alert alert-success alert-dismissible fade show';
+        alertDiv.innerHTML = `
+            <i class="bi bi-check-circle"></i> Code scanné: <strong>${code}</strong> - Veuillez compléter les informations du médicament.
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        document.querySelector('.card-body').insertBefore(alertDiv, document.querySelector('form'));
+    }
+
+    function ajouterStock() {
+        document.getElementById('actionTitle').textContent = 'Ajouter au stock';
+        document.getElementById('actionType').value = 'ajouter';
+        document.getElementById('medicamentId').value = currentMedicamentId;
+        document.getElementById('quantiteAjustement').value = '';
+        document.getElementById('motifAjustement').value = '';
+        
+        // Fermer le modal scanner et ouvrir le modal d'ajustement
+        bootstrap.Modal.getInstance(document.getElementById('scannerModal')).hide();
+        new bootstrap.Modal(document.getElementById('ajusterStockModal')).show();
+    }
+
+    function retirerStock() {
+        document.getElementById('actionTitle').textContent = 'Retirer du stock';
+        document.getElementById('actionType').value = 'retirer';
+        document.getElementById('medicamentId').value = currentMedicamentId;
+        document.getElementById('quantiteAjustement').value = '';
+        document.getElementById('motifAjustement').value = '';
+        
+        // Fermer le modal scanner et ouvrir le modal d'ajustement
+        bootstrap.Modal.getInstance(document.getElementById('scannerModal')).hide();
+        new bootstrap.Modal(document.getElementById('ajusterStockModal')).show();
+    }
+
+    function confirmerAjustement() {
+        const form = document.getElementById('ajusterStockForm');
+        const medicamentId = document.getElementById('medicamentId').value;
+        const actionType = document.getElementById('actionType').value;
+        const quantite = document.getElementById('quantiteAjustement').value;
+        const motif = document.getElementById('motifAjustement').value;
+
+        if (!quantite || quantite <= 0) {
+            alert('Veuillez entrer une quantité valide.');
+            return;
+        }
+
+        // Appel AJAX pour ajuster le stock
+        fetch('/medicaments/ajuster-stock/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({
+                medicament_id: medicamentId,
+                action_type: actionType,
+                quantite: quantite,
+                motif: motif
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Fermer le modal
+                bootstrap.Modal.getInstance(document.getElementById('ajusterStockModal')).hide();
+                
+                // Afficher un message de succès
+                alert(data.message);
+                
+                // Rediriger vers la liste des médicaments
+                window.location.href = "{% url 'pharmacy:liste_medicaments' %}";
+            } else {
+                alert('Erreur: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Erreur ajustement stock:', error);
+            alert('Erreur lors de l\'ajustement du stock.');
+        });
+    }
+
+    function resetScanner() {
+        // Réinitialiser l'affichage
+        document.getElementById('scanResult').style.display = 'none';
+        document.getElementById('medicamentExistant').style.display = 'none';
+        document.getElementById('reader').style.display = 'block';
+        currentScannedCode = null;
+        currentMedicamentId = null;
+        
+        // Redémarrer le scanner
+        startScanner();
+    }
+
+    // Fonction pour récupérer le cookie CSRF
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+</script>
+{% endblock %}

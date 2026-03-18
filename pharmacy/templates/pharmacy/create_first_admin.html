@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Créer un Compte Administrateur - PharmaCare</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="min-vh-100 d-flex align-items-center justify-content-center py-5">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-md-8 col-lg-6">
+                    <div class="text-center mb-4">
+                        <a href="{% url 'pharmacy:admin_home' %}" class="btn btn-link text-white">
+                            <i class="fas fa-arrow-left"></i> Retour
+                        </a>
+                    </div>
+
+                    <div class="card shadow-lg border-0">
+                        <div class="card-body p-5">
+                            <div class="text-center mb-4">
+                                <div class="admin-icon mb-3">
+                                    <i class="fas fa-user-shield"></i>
+                                </div>
+                                <h2 class="fw-bold">Créer un Compte Administrateur</h2>
+                                <p class="text-muted">Premier compte administrateur du système</p>
+                            </div>
+
+                            <div class="alert alert-info border-0 shadow-sm mb-4">
+                                <i class="fas fa-info-circle"></i>
+                                <strong>Important :</strong> Ce compte aura tous les privilèges d'administration.
+                            </div>
+
+                            {% if messages %}
+                                {% for message in messages %}
+                                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                    {{ message }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                </div>
+                                {% endfor %}
+                            {% endif %}
+
+                            <form method="post" id="adminForm">
+                                {% csrf_token %}
+                                
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label for="first_name" class="form-label">
+                                            <i class="fas fa-user"></i> Prénom
+                                        </label>
+                                        <input type="text" class="form-control" id="first_name" name="first_name" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="last_name" class="form-label">
+                                            <i class="fas fa-user"></i> Nom
+                                        </label>
+                                        <input type="text" class="form-control" id="last_name" name="last_name" required>
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="username" class="form-label">
+                                        <i class="fas fa-at"></i> Nom d'utilisateur <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="text" class="form-control" id="username" name="username" required>
+                                    <small class="text-muted">Sera utilisé pour la connexion</small>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="email" class="form-label">
+                                        <i class="fas fa-envelope"></i> Email <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="email" class="form-control" id="email" name="email" required>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="password1" class="form-label">
+                                        <i class="fas fa-lock"></i> Mot de passe <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="input-group">
+                                        <input type="password" class="form-control" id="password1" name="password1" required minlength="8">
+                                        <button class="btn btn-outline-secondary" type="button" id="togglePassword1">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </div>
+                                    <small class="text-muted">Minimum 8 caractères</small>
+                                </div>
+
+                                <div class="mb-4">
+                                    <label for="password2" class="form-label">
+                                        <i class="fas fa-lock"></i> Confirmer le mot de passe <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="input-group">
+                                        <input type="password" class="form-control" id="password2" name="password2" required minlength="8">
+                                        <button class="btn btn-outline-secondary" type="button" id="togglePassword2">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </div>
+                                    <div id="passwordMatch" class="mt-2"></div>
+                                </div>
+
+                                <div class="alert alert-warning border-0 shadow-sm mb-4">
+                                    <i class="fas fa-shield-alt"></i>
+                                    <strong>Sécurité :</strong>
+                                    <ul class="mb-0 mt-2">
+                                        <li>Utilisez un mot de passe fort et unique</li>
+                                        <li>Ne partagez jamais vos identifiants</li>
+                                        <li>Vous aurez accès à toutes les fonctionnalités</li>
+                                    </ul>
+                                </div>
+
+                                <div class="d-grid gap-2">
+                                    <button type="submit" class="btn btn-primary btn-lg">
+                                        <i class="fas fa-user-plus"></i> Créer le Compte Administrateur
+                                    </button>
+                                </div>
+                            </form>
+
+                            <hr class="my-4">
+
+                            <div class="text-center">
+                                <small class="text-muted">
+                                    <i class="fas fa-lock"></i> Vos informations sont sécurisées
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="text-center mt-4">
+                        <p class="text-white">
+                            <small>PharmaCare &copy; 2026 - Système de Gestion de Pharmacie</small>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .card {
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.98);
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        .admin-icon {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+            animation: pulse 2s infinite;
+        }
+
+        .admin-icon i {
+            font-size: 3rem;
+            color: white;
+        }
+
+        .form-control {
+            border-radius: 10px;
+            padding: 12px 15px;
+            border: 2px solid #e2e8f0;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+
+        .btn {
+            border-radius: 12px;
+            padding: 12px 24px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .alert {
+            border-radius: 15px;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+        }
+
+        .input-group .btn-outline-secondary {
+            border-radius: 0 10px 10px 0;
+            border: 2px solid #e2e8f0;
+            border-left: none;
+        }
+
+        .input-group .form-control {
+            border-radius: 10px 0 0 10px;
+        }
+
+        #passwordMatch.text-success {
+            color: #10b981 !important;
+        }
+
+        #passwordMatch.text-danger {
+            color: #ef4444 !important;
+        }
+    </style>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Toggle password visibility
+        document.getElementById('togglePassword1').addEventListener('click', function() {
+            const password = document.getElementById('password1');
+            const icon = this.querySelector('i');
+            if (password.type === 'password') {
+                password.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                password.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        });
+
+        document.getElementById('togglePassword2').addEventListener('click', function() {
+            const password = document.getElementById('password2');
+            const icon = this.querySelector('i');
+            if (password.type === 'password') {
+                password.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                password.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        });
+
+        // Check password match
+        const password1 = document.getElementById('password1');
+        const password2 = document.getElementById('password2');
+        const matchDiv = document.getElementById('passwordMatch');
+
+        function checkPasswordMatch() {
+            if (password2.value === '') {
+                matchDiv.innerHTML = '';
+                return;
+            }
+            
+            if (password1.value === password2.value) {
+                matchDiv.innerHTML = '<small class="text-success"><i class="fas fa-check-circle"></i> Les mots de passe correspondent</small>';
+            } else {
+                matchDiv.innerHTML = '<small class="text-danger"><i class="fas fa-times-circle"></i> Les mots de passe ne correspondent pas</small>';
+            }
+        }
+
+        password1.addEventListener('input', checkPasswordMatch);
+        password2.addEventListener('input', checkPasswordMatch);
+
+        // Form validation
+        document.getElementById('adminForm').addEventListener('submit', function(e) {
+            if (password1.value !== password2.value) {
+                e.preventDefault();
+                alert('Les mots de passe ne correspondent pas!');
+                return false;
+            }
+            
+            if (password1.value.length < 8) {
+                e.preventDefault();
+                alert('Le mot de passe doit contenir au moins 8 caractères!');
+                return false;
+            }
+        });
+    </script>
+</body>
+</html>
