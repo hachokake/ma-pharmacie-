@@ -231,37 +231,71 @@ if REDIS_URL:
     }
 
 # Logging Configuration
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'formatters': {
-        'verbose': {
-            'format': '{levelname} {asctime} {module} {message}',
-            'style': '{',
+# Configuration adaptée pour production (Render) et développement
+if DEBUG:
+    # En développement : logs dans fichier et console
+    log_handlers = ['console', 'file']
+    LOGGING = {
+        'version': 1,
+        'disable_existing_loggers': False,
+        'formatters': {
+            'verbose': {
+                'format': '{levelname} {asctime} {module} {message}',
+                'style': '{',
+            },
         },
-    },
-    'handlers': {
-        'file': {
-            'level': 'ERROR',
-            'class': 'logging.FileHandler',
-            'filename': BASE_DIR / 'logs' / 'django_errors.log',
-            'formatter': 'verbose',
+        'handlers': {
+            'file': {
+                'level': 'ERROR',
+                'class': 'logging.FileHandler',
+                'filename': BASE_DIR / 'logs' / 'django_errors.log',
+                'formatter': 'verbose',
+            },
+            'console': {
+                'level': 'INFO',
+                'class': 'logging.StreamHandler',
+                'formatter': 'verbose',
+            },
         },
-        'console': {
+        'root': {
+            'handlers': log_handlers,
             'level': 'INFO',
-            'class': 'logging.StreamHandler',
-            'formatter': 'verbose',
         },
-    },
-    'root': {
-        'handlers': ['console', 'file'],
-        'level': 'INFO',
-    },
-    'loggers': {
-        'django': {
-            'handlers': ['console', 'file'],
+        'loggers': {
+            'django': {
+                'handlers': log_handlers,
+                'level': 'INFO',
+                'propagate': False,
+            },
+        },
+    }
+else:
+    # En production : logs uniquement dans console (capturés par Render)
+    LOGGING = {
+        'version': 1,
+        'disable_existing_loggers': False,
+        'formatters': {
+            'verbose': {
+                'format': '{levelname} {asctime} {module} {message}',
+                'style': '{',
+            },
+        },
+        'handlers': {
+            'console': {
+                'level': 'INFO',
+                'class': 'logging.StreamHandler',
+                'formatter': 'verbose',
+            },
+        },
+        'root': {
+            'handlers': ['console'],
             'level': 'INFO',
-            'propagate': False,
         },
-    },
-}
+        'loggers': {
+            'django': {
+                'handlers': ['console'],
+                'level': 'INFO',
+                'propagate': False,
+            },
+        },
+    }
