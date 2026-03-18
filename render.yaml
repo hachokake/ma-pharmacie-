@@ -1,0 +1,14 @@
+﻿services:
+  - type: web
+    name: ma-pharmacie
+    runtime: python
+    plan: free
+    buildCommand: ./build.sh
+    startCommand: gunicorn pharmacy_project.wsgi:application --bind 0.0.0.0:$PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: False
